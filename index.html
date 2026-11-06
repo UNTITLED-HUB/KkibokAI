@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="ko" data-font="md">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+  <meta name="theme-color" content="#131926" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="description" content="KkibokAI — AI 채팅, 브라우저 Linux 샌드박스, 실시간 음성 대화" />
+  <title>KkibokAI</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/app.css" />
+  <script src="https://cdn.jsdelivr.net/npm/marked@15.0.12/marked.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" defer></script>
+  <script type="module" src="assets/js/main.js"></script>
+</head>
+<body>
+  <noscript><p class="noscript">KkibokAI를 사용하려면 브라우저에서 JavaScript를 켜 주세요.</p></noscript>
+
+  <!-- 시작 로딩 -->
+  <div id="boot" class="boot" aria-live="polite">
+    <svg class="mark spin" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 22 12 12 22 2 12Z" /></svg>
+  </div>
+
+  <!-- 로그인 / 회원가입 -->
+  <section id="auth" class="auth" hidden>
+    <div class="auth-card">
+      <div class="brand brand-lg">
+        <svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 22 12 12 22 2 12Z" /></svg>
+        <span>KkibokAI</span>
+      </div>
+      <p class="auth-lead">대화하고, 만들고, 말로 물어보세요.</p>
+      <div class="tabs" role="tablist">
+        <button role="tab" id="tabLogin" aria-selected="true" data-tab="login">로그인</button>
+        <button role="tab" id="tabSignup" aria-selected="false" data-tab="signup">회원가입</button>
+      </div>
+      <form id="authForm" class="form" novalidate>
+        <label class="field">
+          <span>사용자 이름</span>
+          <input id="authUser" name="username" autocomplete="username" maxlength="24" spellcheck="false" autocapitalize="off" required />
+          <small class="hint" data-for="signup">영문만 8~24자</small>
+        </label>
+        <label class="field">
+          <span>비밀번호</span>
+          <div class="pw-wrap">
+            <input id="authPass" name="password" type="password" autocomplete="current-password" maxlength="32" required />
+            <button type="button" class="icon-btn pw-toggle" aria-label="비밀번호 보기" data-icon="eye"></button>
+          </div>
+          <small class="hint" data-for="signup">8~32자, 영문과 숫자를 각각 1자 이상</small>
+        </label>
+        <label class="field" data-for="signup">
+          <span>비밀번호 확인</span>
+          <input id="authPass2" type="password" autocomplete="new-password" maxlength="32" />
+        </label>
+        <div id="authCaptcha" class="captcha" data-for="signup"></div>
+        <p id="authError" class="form-error" role="alert"></p>
+        <button id="authSubmit" class="btn btn-primary btn-block" type="submit">로그인</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- 메인 -->
+  <div id="shell" class="shell" hidden>
+    <aside id="sidebar" class="sidebar" aria-label="사이드바">
+      <div class="sb-head">
+        <div class="brand">
+          <svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 22 12 12 22 2 12Z" /></svg>
+          <span>KkibokAI</span>
+        </div>
+        <button id="sbClose" class="icon-btn" aria-label="사이드바 닫기" title="닫기" data-icon="x"></button>
+      </div>
+      <nav class="sb-menu">
+        <button class="sb-item sb-new" data-action="new-chat"><i data-icon="plus"></i>새 채팅</button>
+        <button class="sb-item" data-action="panel" data-panel="account"><i data-icon="user"></i>계정</button>
+        <button class="sb-item" data-action="panel" data-panel="tokens"><i data-icon="gift"></i>토큰 받기</button>
+        <button class="sb-item" data-action="panel" data-panel="codes"><i data-icon="ticket"></i>코드 교환</button>
+        <button class="sb-item" data-action="panel" data-panel="settings"><i data-icon="sliders"></i>설정</button>
+        <button class="sb-item" data-action="panel" data-panel="storage"><i data-icon="database"></i>저장공간</button>
+        <button class="sb-item" data-action="sandbox"><i data-icon="terminal"></i>Sandbox Linux</button>
+      </nav>
+      <h2 class="sb-heading">최근 채팅</h2>
+      <ul id="chatList" class="chat-list" aria-label="채팅 목록"></ul>
+      <div class="sb-foot">
+        <div class="me">
+          <span id="meName" class="me-name"></span>
+          <button id="meTokens" class="token-chip" data-action="panel" data-panel="tokens" title="남은 토큰"></button>
+        </div>
+      </div>
+    </aside>
+    <div id="scrim" class="scrim" hidden></div>
+
+    <main id="main" class="main">
+      <header class="topbar">
+        <button id="sbOpen" class="icon-btn" aria-label="사이드바 열기" data-icon="menu"></button>
+        <h1 id="chatTitle" class="chat-title">새 채팅</h1>
+        <button id="topTokens" class="token-chip" data-action="panel" data-panel="tokens" title="남은 토큰"></button>
+      </header>
+
+      <div id="thread" class="thread">
+        <div id="empty" class="empty">
+          <svg class="mark mark-xl" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 22 12 12 22 2 12Z" /></svg>
+          <h2 id="emptyHello">무엇이든 물어보세요</h2>
+          <p class="empty-sub">가벼운 질문은 <b class="m-nb">NO BRAIN</b>, 만들고 조사하는 일은 <b class="m-work">WORK</b>로 맡겨 보세요.</p>
+          <div class="examples" id="examples"></div>
+        </div>
+        <div id="messages" class="messages" aria-live="polite"></div>
+        <button id="toBottom" class="to-bottom" aria-label="맨 아래로" hidden data-icon="arrow-down"></button>
+      </div>
+
+      <footer id="composer" class="composer">
+        <div class="mode-rows">
+          <div id="subModes" class="seg seg-sub" role="radiogroup" aria-label="WORK 세부 모드" hidden>
+            <button role="radio" data-sub="fast" title="빠른 계획·실행">FAST<span class="pips" data-n="1"></span></button>
+            <button role="radio" data-sub="think" title="더 깊은 추론">THINK<span class="pips" data-n="2"></span></button>
+            <button role="radio" data-sub="deep" title="계획·실행·검증 강화">DEEP<span class="pips" data-n="3"></span></button>
+            <button role="radio" data-sub="ultra" title="가장 강력한 모델">ULTRA<span class="pips" data-n="4"></span></button>
+          </div>
+          <div id="modes" class="seg seg-main" role="radiogroup" aria-label="실행 모드">
+            <button role="radio" data-mode="nobrain" title="짧고 빠른 답변">NO BRAIN</button>
+            <button role="radio" data-mode="work" title="계획하고 작업을 수행">WORK</button>
+          </div>
+        </div>
+        <div id="attachTray" class="attach-tray" hidden></div>
+        <div class="input-row">
+          <button id="btnAttach" class="icon-btn round" aria-label="파일 첨부" title="파일 첨부" data-icon="paperclip"></button>
+          <input id="fileInput" type="file" multiple hidden />
+          <div class="input-box">
+            <textarea id="prompt" rows="1" placeholder="무엇이든 물어보세요" aria-label="메시지 입력" maxlength="40000"></textarea>
+            <button id="btnSend" class="send-btn" aria-label="보내기" title="보내기" data-icon="send" disabled></button>
+          </div>
+          <button id="btnMic" class="icon-btn round" aria-label="음성으로 보내기" title="음성 전송" data-icon="mic"></button>
+          <button id="btnLive" class="live-btn" aria-label="LIVE 음성 대화 시작" title="LIVE 대화">
+            <svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 22 12 12 22 2 12Z" /></svg><span>LIVE</span>
+          </button>
+        </div>
+        <div id="recBar" class="rec-bar" hidden>
+          <span class="rec-dot"></span><span id="recTime">0:00</span><span class="rec-label">녹음 중 — 다시 누르면 전송</span>
+          <button id="recCancel" class="btn btn-ghost btn-sm">취소</button>
+        </div>
+      </footer>
+    </main>
+
+    <!-- Sandbox Linux -->
+    <section id="sandbox" class="sandbox" hidden aria-label="Sandbox Linux">
+      <header class="sbx-head">
+        <div class="sbx-title"><i data-icon="terminal"></i><span>Sandbox Linux</span></div>
+        <div class="sbx-actions">
+          <button id="sbxFilesToggle" class="btn btn-ghost btn-sm">파일</button>
+          <button id="sbxClose" class="icon-btn" aria-label="샌드박스 닫기" data-icon="x"></button>
+        </div>
+      </header>
+      <div class="sbx-body">
+        <div id="sbxFiles" class="sbx-files"></div>
+        <div id="term" class="term" tabindex="0"></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 패널(시트) -->
+  <div id="sheetWrap" class="sheet-wrap" hidden>
+    <div class="sheet-scrim" data-close></div>
+    <section id="sheet" class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+      <header class="sheet-head">
+        <h2 id="sheetTitle"></h2>
+        <button class="icon-btn" aria-label="닫기" data-close data-icon="x"></button>
+      </header>
+      <div id="sheetBody" class="sheet-body"></div>
+    </section>
+  </div>
+
+  <!-- LIVE -->
+  <section id="live" class="live" hidden aria-label="LIVE 음성 대화">
+    <button id="liveClose" class="icon-btn live-close" aria-label="LIVE 종료" data-icon="x"></button>
+    <div class="live-stage">
+      <div id="liveOrb" class="live-orb" data-state="idle">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 22 12 12 22 2 12Z" /></svg>
+      </div>
+      <p id="liveStatus" class="live-status">준비 중</p>
+      <p id="liveHeard" class="live-heard"></p>
+      <p id="liveReply" class="live-reply"></p>
+    </div>
+    <div class="live-controls">
+      <button id="liveMute" class="btn btn-ghost">말하기 멈춤</button>
+      <button id="liveEnd" class="btn btn-danger">종료</button>
+    </div>
+  </section>
+
+  <div id="toasts" class="toasts" aria-live="assertive"></div>
+</body>
+</html>
