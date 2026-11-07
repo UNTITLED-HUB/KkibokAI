@@ -479,3 +479,42 @@ input[type='range'] { accent-color: var(--live); width: 100%; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
 }
+
+/* ---------------- 입력 검증 상태 ---------------- */
+.field input[data-state='invalid'],
+.field input[data-state='invalid']:focus {
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 7%, var(--bg-2));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 18%, transparent);
+}
+.field input[data-state='valid'],
+.field input[data-state='valid']:focus {
+  border-color: var(--ok);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 14%, transparent);
+}
+.field-msg[data-state='invalid'] { color: var(--danger); font-weight: 500; }
+.field-msg[data-state='valid'] { color: var(--ok); }
+.auth.signup .field-msg { display: block; }
+
+/* 비밀번호 안전도 */
+.pw-strength { display: flex; align-items: center; gap: 10px; margin-top: 2px; }
+.pw-strength .bars { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; flex: 1; max-width: 220px; }
+.pw-strength .bars i { height: 5px; border-radius: 3px; background: var(--raised); transition: background .2s; }
+.pw-strength .label { font-size: .82em; font-weight: 600; white-space: nowrap; }
+.pw-strength[data-level='0'] { --sc: #ff5c5c; }
+.pw-strength[data-level='1'] { --sc: #ff9a4a; }
+.pw-strength[data-level='2'] { --sc: #f2c14e; }
+.pw-strength[data-level='3'] { --sc: #9bd65a; }
+.pw-strength[data-level='4'] { --sc: #4fd18b; }
+.pw-strength .label { color: var(--sc); }
+.pw-strength[data-level='0'] .bars i:nth-child(-n+1),
+.pw-strength[data-level='1'] .bars i:nth-child(-n+2),
+.pw-strength[data-level='2'] .bars i:nth-child(-n+3),
+.pw-strength[data-level='3'] .bars i:nth-child(-n+4),
+.pw-strength[data-level='4'] .bars i { background: var(--sc); }
+
+/* 로그인 실패 대기 + hCAPTCHA */
+.login-guard { display: grid; gap: 10px; padding: 12px 14px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--w1) 40%, transparent); background: color-mix(in srgb, var(--w1) 7%, transparent); }
+.login-wait { margin: 0; color: var(--w1); font-size: .9em; font-variant-numeric: tabular-nums; }
+.login-wait:empty { display: none; }
+.auth.signup .login-guard { display: none; }
