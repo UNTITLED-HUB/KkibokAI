@@ -149,7 +149,7 @@ export const panels = {
       pwErr, pwBtn));
     const fCur = bindField(cur, () => (cur.value ? '' : '현재 비밀번호를 입력해 주세요.'), { okText: ' ' });
     const fNw = bindField(nw, () => checkPassword(nw.value) || (nw.value && nw.value === cur.value ? '현재 비밀번호와 다른 비밀번호를 써 주세요.' : ''));
-    const fNw2 = bindField(nw2, () => (!nw2.value ? '새 비밀번호를 한 번 더 입력해 주세요.' : nw2.value === nw.value ? '' : '새 비밀번호가 서로 달라요.'), { okText: '비밀번호가 일치해요' });
+    const fNw2 = bindField(nw2, () => (!nw2.value ? '새 비밀번호를 한 번 더 입력해 주세요.' : nw2.value === nw.value ? '' : '새 비밀번호가 서로 달라요.'), { okText: '비밀번호가 일치해요', live: true });
     nw.addEventListener('input', () => {
       meter.update(nw.value, u.username);
       fNw2.refresh();

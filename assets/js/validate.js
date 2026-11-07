@@ -91,7 +91,8 @@ export function strengthMeter() {
 /**
  * @param {HTMLInputElement} input
  * @param {() => string} check  오류 메시지('' 이면 통과)
- * @param {{ hint?: string, okText?: string, enabled?: () => boolean }} opts  enabled 가 false 면 검사·색 표시 안 함
+ * @param {{ hint?: string, okText?: string, enabled?: () => boolean, live?: boolean }} opts
+ *   enabled 가 false 면 검사·색 표시 안 함 / live 가 true 면 입력하는 즉시(칸을 벗어나기 전에도) 빨강·초록 표시
  */
 export function bindField(input, check, opts = {}) {
   const field = input.closest('.field') || input.parentElement;
@@ -139,7 +140,12 @@ export function bindField(input, check, opts = {}) {
   input.addEventListener('blur', () => {
     if (input.value || touched) api.validate();
   });
-  input.addEventListener('input', () => api.refresh());
+  input.addEventListener('input', () => {
+    if (opts.live && input.value && on()) {
+      touched = true;
+      paint();
+    } else api.refresh();
+  });
   return api;
 }
 
