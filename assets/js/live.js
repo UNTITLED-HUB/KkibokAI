@@ -1,8 +1,8 @@
 // LIVE 음성 대화: 듣기(STT) → AI 전송 → 실시간 TTS → 다시 듣기
-import { chat } from './chat.js?v=1.5.0';
-import { store } from './store.js?v=1.5.0';
-import { $, toast } from './ui.js?v=1.5.0';
-import { SpeechRec, startRecording, transcribe, tts } from './voice.js?v=1.5.0';
+import { chat } from './chat.js?v=1.5.1';
+import { store } from './store.js?v=1.5.1';
+import { $, toast } from './ui.js?v=1.5.1';
+import { SpeechRec, startRecording, transcribe, tts } from './voice.js?v=1.5.1';
 
 const S = { idle: '준비 중', listening: '듣고 있어요', thinking: '생각하는 중', speaking: '말하는 중', paused: '일시 정지' };
 

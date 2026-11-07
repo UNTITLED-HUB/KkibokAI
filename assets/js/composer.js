@@ -1,8 +1,8 @@
 // 질문 입력창: 실행 모드 선택, 첨부, 음성 전송, 보내기/중지
-import { chat } from './chat.js?v=1.5.0';
-import { store } from './store.js?v=1.5.0';
-import { $, $$, esc, fmtBytes, h, icon, modeKey, setIcon, toast } from './ui.js?v=1.5.0';
-import { recorderSupported, startRecording, transcribe } from './voice.js?v=1.5.0';
+import { chat } from './chat.js?v=1.5.1';
+import { store } from './store.js?v=1.5.1';
+import { $, $$, esc, fmtBytes, h, icon, modeKey, setIcon, toast } from './ui.js?v=1.5.1';
+import { recorderSupported, startRecording, transcribe } from './voice.js?v=1.5.1';
 
 const MAX_FILES = 4;
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -198,13 +198,14 @@ export const composer = {
           toast(`지원하지 않는 형식: ${f.name}`, 'error');
           continue;
         }
+        const originalBytes = f.size <= 500 * 1024 ? new Uint8Array(await f.arrayBuffer()) : null;
         if (isText) {
           if (f.size > 1024 * 1024) {
             toast(`1MB 초과: ${f.name}`, 'error');
             continue;
           }
           const text = await readAs(f, 'text');
-          this.files.push({ name: f.name, mime: f.type || 'text/plain', size: f.size, kind: 'text', text });
+          this.files.push({ name: f.name, mime: f.type || 'text/plain', size: f.size, kind: 'text', text, originalBytes, originalSize: f.size, originalName: f.name, originalMime: f.type });
         } else {
           let dataUrl;
           let mime = f.type;
@@ -220,7 +221,7 @@ export const composer = {
             toast(`5MB 초과: ${f.name}`, 'error');
             continue;
           }
-          this.files.push({ name, mime, size, kind: isImg ? 'image' : 'pdf', data, preview: isImg ? dataUrl : null });
+          this.files.push({ name, mime, size, kind: isImg ? 'image' : 'pdf', data, preview: isImg ? dataUrl : null, originalBytes, originalSize: f.size, originalName: f.name, originalMime: f.type });
         }
       } catch {
         toast(`파일을 읽지 못했어요: ${f.name}`, 'error');

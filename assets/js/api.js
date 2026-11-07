@@ -1,5 +1,5 @@
 // 서버 API 클라이언트 (JSON + Server-Sent Events)
-import { CONFIG } from './config.js?v=1.5.0';
+import { CONFIG } from './config.js?v=1.5.1';
 
 const TOKEN_KEY = 'kb_token';
 

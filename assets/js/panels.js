@@ -1,12 +1,12 @@
 // 사이드바 패널: 계정, 토큰 받기, 코드 교환, 설정, 저장공간
-import { api, session } from './api.js?v=1.5.0';
-import { mountCaptcha } from './captcha.js?v=1.5.0';
-import { chat } from './chat.js?v=1.5.0';
-import { sandbox } from './sandbox/index.js?v=1.5.0';
-import { local, store } from './store.js?v=1.5.0';
-import { $, confirmDialog, debounce, fmtBytes, fmtTime, fmtTokens, fmtWait, h, icon, promptDialog, toast } from './ui.js?v=1.5.0';
-import { bindField, checkPassword, checkUsername, PASSWORD_HINT, strengthMeter, USERNAME_HINT, validateAll } from './validate.js?v=1.5.0';
-import { tts } from './voice.js?v=1.5.0';
+import { api, session } from './api.js?v=1.5.1';
+import { mountCaptcha } from './captcha.js?v=1.5.1';
+import { chat } from './chat.js?v=1.5.1';
+import { sandbox } from './sandbox/index.js?v=1.5.1';
+import { local, store } from './store.js?v=1.5.1';
+import { $, confirmDialog, debounce, fmtBytes, fmtTime, fmtTokens, fmtWait, h, icon, promptDialog, toast } from './ui.js?v=1.5.1';
+import { bindField, checkPassword, checkUsername, PASSWORD_HINT, strengthMeter, USERNAME_HINT, validateAll } from './validate.js?v=1.5.1';
+import { tts } from './voice.js?v=1.5.1';
 
 const PURPOSE = {
   answer: '답변', plan: '계획', execute: '실행', review: '검토', verify: '검증', report: '결과 정리',

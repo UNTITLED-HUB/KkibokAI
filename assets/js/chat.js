@@ -1,12 +1,13 @@
 // 채팅: 메시지 렌더링, 스트리밍, WORK 도구 실행 왕복, 수정/다시 시도/읽기
-import { api, ApiError } from './api.js?v=1.5.0';
-import { renderMarkdown } from './markdown.js?v=1.5.0';
-import { sandbox } from './sandbox/index.js?v=1.5.0';
-import { store } from './store.js?v=1.5.0';
+import { api, ApiError, session } from './api.js?v=1.5.1';
+import { CONFIG } from './config.js?v=1.5.1';
+import { renderMarkdown } from './markdown.js?v=1.5.1';
+import { sandbox } from './sandbox/index.js?v=1.5.1';
+import { store } from './store.js?v=1.5.1';
 import {
   $, copyText, esc, fmtSeconds, fmtTokens, h, icon, MODE_VAR, modeKey, modeTag, setIcon, toast,
-} from './ui.js?v=1.5.0';
-import { tts } from './voice.js?v=1.5.0';
+} from './ui.js?v=1.5.1';
+import { tts } from './voice.js?v=1.5.1';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const RUNNING = ['running', 'waiting_tools'];
@@ -156,16 +157,31 @@ export const chat = {
     }
   },
 
-  attachmentsEl(atts) {
-    const box = h('div', { class: 'msg-atts' });
-    for (const a of atts) {
-      if (a.kind === 'image' && a.url) {
-        box.append(h('a', { class: 'msg-att img', href: a.url, target: '_blank', rel: 'noopener', title: a.name }, h('img', { src: a.url, alt: a.name, loading: 'lazy' })));
-      } else {
-        box.append(h('span', { class: 'msg-att', title: a.name, html: icon(a.kind === 'image' ? 'image' : 'file') }, h('span', {}, a.name)));
-      }
-    }
-    return box;
+  attachmentsEl(atts, message) {
+    const box = h('div', { class: 'msg-atts file-cards' });
+    atts.forEach((a, index) => {
+      const name = a.name || a.filename || '파일';
+      const getBlob = async () => {
+        let url = a.url;
+        if (!url && !String(message.id).startsWith('tmp')) url = (await api.get(`/attachments/url?message_id=${encodeURIComponent(message.id)}&index=${index}`)).url;
+        if (!url) throw new Error('업로드가 완료되면 열 수 있어요.');
+        const res = await fetch(url); if (!res.ok) throw new Error('파일을 불러오지 못했어요.'); return res.blob();
+      };
+      const isText = (blob) => blob.type.startsWith('text/') || /json|javascript|xml|sql/.test(blob.type) || /\.(txt|md|js|ts|html|css|json|sql|py|csv|xml|yaml|yml|sh)$/i.test(name);
+      const action = (label, fn) => { const b = h('button', { class: 'file-action', type: 'button' }, label); b.onclick = async () => { try { await fn(await getBlob()); } catch(e) { toast(e.message || '파일을 열 수 없어요.', 'error'); } }; return b; };
+      const view = async (blob) => {
+        const overlay = h('div', { class: 'file-preview-overlay' }); const panel = h('section', { class: 'file-preview-panel', role: 'dialog', 'aria-label': name }); const body = h('div', { class: 'file-preview-body' }); const close = h('button', { class: 'file-action' }, '닫기'); let objectUrl;
+        close.onclick = () => { overlay.remove(); if (objectUrl) URL.revokeObjectURL(objectUrl); };
+        panel.append(h('header', {}, h('strong', {}, name), close), body); overlay.append(panel); document.body.append(overlay);
+        if ((a.mime || blob.type).startsWith('image/')) { objectUrl = URL.createObjectURL(blob); body.append(h('img', { src: objectUrl, alt: name })); }
+        else if (isText(blob) && blob.size <= 2097152) body.append(h('pre', {}, await blob.text()));
+        else if ((a.mime || blob.type) === 'application/pdf') { objectUrl = URL.createObjectURL(blob); body.append(h('iframe', { src: objectUrl, title: name, sandbox: '' })); }
+        else body.textContent = '미리볼 수 없는 파일이에요. 다운로드해서 열어 주세요.';
+      };
+      const copy = async (blob) => { if (!isText(blob) || blob.size > 2097152) throw new Error('2MB 이하 텍스트 파일만 복사할 수 있어요.'); if (await copyText(await blob.text())) toast('복사했어요'); };
+      const download = async (blob) => { const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = name; document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 5000); };
+      box.append(h('div', { class: 'file-card' }, h('div', { class: 'file-card-title', title: name }, name), h('div', { class: 'file-card-actions' }, action('미리보기', view), action('복사', copy), action('다운로드', download))));
+    }); return box;
   },
 
   metaEl(meta) {
@@ -195,7 +211,7 @@ export const chat = {
 
   userEl(m) {
     const el = h('div', { class: 'msg user', dataset: { id: m.id } });
-    if (m.attachments?.length) el.append(this.attachmentsEl(m.attachments));
+    if (m.attachments?.length) el.append(this.attachmentsEl(m.attachments, m));
     if (m.content) el.append(h('div', { class: 'bubble' }, m.content));
     if (store.setting('show_meta', true) && (m.meta?.duration_ms != null || m.meta?.cost != null)) el.append(this.metaEl(m.meta));
     if (!String(m.id).startsWith('tmp')) {
@@ -216,6 +232,7 @@ export const chat = {
     const stepsBox = h('div');
     const body = h('div', { class: 'ai-body md' + (m.meta?.error ? ' error' : '') });
     el.append(stepsBox, body);
+    if (m.attachments?.length) el.append(this.attachmentsEl(m.attachments, m));
     m._el = el;
     m._steps = stepsBox;
     m._body = body;
@@ -257,22 +274,14 @@ export const chat = {
       if (s.detail) li.append(h('details', { class: 'act-detail' }, h('summary', {}, '자세히'), h('pre', {}, s.detail)));
       return li;
     };
-    if (running) {
-      const ol = h('ol', { class: 'activity' });
-      const from = Math.max(0, steps.length - 6);
-      if (from) ol.append(h('li', { class: 'act more' }, `이전 작업 ${from}개`));
-      steps.slice(from).forEach((s, j) => ol.append(item(s, from + j)));
-      box.replaceChildren(ol);
-      return;
-    }
     const wasOpen = box.querySelector('details.steps')?.open;
-    const det = h('details', { class: 'steps' });
+    const det = h('details', { class: 'steps timeline' });
     det.open = !!wasOpen;
-    det.append(h('summary', { html: icon('chevron', 'chev') }, `작업 과정 ${steps.length}단계`));
+    const label = running ? activityHtml(steps[steps.length - 1], true) : `작업 과정 ${steps.length}단계`;
+    det.append(h('summary', {}, h('span', { class: 'timeline-status', html: running ? '<i class="spin"></i>' : icon('check') }), h('span', { class: 'timeline-label', html: label }), h('span', { html: icon('chevron', 'chev') })));
     const ol = h('ol', { class: 'activity' });
     steps.forEach((s, i) => ol.append(item(s, i)));
-    det.append(ol);
-    box.replaceChildren(det);
+    det.append(ol); box.replaceChildren(det);
   },
 
   scheduleRender(m) {
@@ -398,6 +407,16 @@ export const chat = {
     scrollBottom(true);
 
     for (const a of attachments) sandbox.saveUpload(a);
+    if (isNew) for (const a of attachments) {
+      if (!a.originalBytes || a.originalSize > 500 * 1024) continue;
+      try {
+        const safeName = String(a.originalName || a.name || 'file').replace(/[\/\\]/g, '_');
+        const id = crypto.randomUUID();
+        const path = `/user/upload/${id}/${safeName}`;
+        const response = await fetch(CONFIG.API_BASE + '/files?path=' + encodeURIComponent(path), { method: 'PUT', headers: { authorization: `Bearer ${session.token}`, 'content-type': a.originalMime || 'application/octet-stream' }, body: a.originalBytes });
+        if (!response.ok) { const data = await response.json().catch(() => ({})); throw new Error(data?.error?.message || `HTTP ${response.status}`); }
+      } catch (e) { toast(`${a.originalName || a.name}: 서버 자동 저장 실패 (${e.message})`, 'error'); }
+    }
 
     const body = {
       chat_id: store.chatId,

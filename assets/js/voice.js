@@ -1,7 +1,7 @@
 // 음성: TTS(브라우저 음성 합성), 녹음 + 서버 STT(Groq Whisper)
-import { api } from './api.js?v=1.5.0';
-import { markdownToSpeech } from './markdown.js?v=1.5.0';
-import { store } from './store.js?v=1.5.0';
+import { api } from './api.js?v=1.5.1';
+import { markdownToSpeech } from './markdown.js?v=1.5.1';
+import { store } from './store.js?v=1.5.1';
 
 // ------------------------------------------------------------
 // TTS
