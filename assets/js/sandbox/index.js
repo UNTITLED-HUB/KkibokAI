@@ -1,5 +1,6 @@
 // Sandbox Linux: 터미널 UI + 파일 탐색 + AI 도구 실행 연결
-import { $, esc, h, icon, toast } from '../ui.js';
+import { $, confirmDialog, esc, h, toast } from '../ui.js';
+import { FileManager } from './files.js';
 import { Shell, stripAnsi } from './shell.js';
 import { VFS } from './vfs.js';
 
@@ -25,13 +26,6 @@ function ansiToHtml(s) {
   }
   flush(s.slice(last));
   return html;
-}
-
-function b64ToBytes(b64) {
-  const bin = atob(b64);
-  const a = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i);
-  return a;
 }
 
 function blobToBase64(blob) {
@@ -63,8 +57,7 @@ class Terminal {
 
   start() {
     this.el.innerHTML = '';
-    this.print('\x1b[1mKkibokAI Sandbox Linux\x1b[0m — 브라우저 안의 격리된 가상 환경입니다.');
-    this.print("\x1b[90m'help' 로 명령어 목록, 'cat README.txt' 로 안내를 볼 수 있어요.\x1b[0m");
+    this.print("\x1b[1mKkibokAI Sandbox Linux\x1b[0m  \x1b[90mhelp: 명령어 목록\x1b[0m");
     this.newPrompt();
   }
 
@@ -205,15 +198,16 @@ export const sandbox = {
   vfs: null,
   shell: null,
   term: null,
-  expanded: new Set(['/user', '/user/download', '/user/upload']),
+  fm: null,
   ready: false,
 
   async init(userId) {
     this.vfs = new VFS(userId);
     await this.vfs.load();
+    this.fm = new FileManager(this.vfs, $('#sbxFiles'));
     this.shell = new Shell(this.vfs, {
-      open: (p) => this.preview(p),
-      download: (p) => this.download(p),
+      open: (p) => this.fm.open(p),
+      download: (p) => this.fm.download(p),
     });
     this.term = new Terminal($('#term'), this.shell);
     this.term.start();
@@ -234,6 +228,7 @@ export const sandbox = {
   },
   open() {
     $('#sandbox').hidden = false;
+    this.vfs?.purgeTrash();
     this.renderFiles();
     setTimeout(() => this.term?.focus(), 30);
   },
@@ -257,36 +252,70 @@ export const sandbox = {
     }
   },
 
-  /** AI 도구 호출 실행 → { output, exit_code } */
+  /** AI 도구 호출 실행 → { output, exit_code }
+   *  잠긴 항목을 건드리면: 실행을 되돌리고 → 사용자에게 승인 요청 → 결과에 맞춰 다시 실행 */
   async runTool(call) {
     if (!this.ready) return { output: '샌드박스가 아직 준비되지 않았습니다.', exit_code: 1 };
+    const vfs = this.vfs;
+    const approved = new Set();
+    const denied = new Set();
+    for (let round = 0; round < 8; round++) {
+      const snap = vfs.hasLocks() ? vfs.snapshot() : null;
+      vfs.actor = 'ai';
+      vfs.approved = approved;
+      vfs.denied = denied;
+      vfs.lockHit = null;
+      let res;
+      try {
+        res = await this.execTool(call, round === 0);
+      } finally {
+        vfs.actor = 'user';
+        vfs.approved = new Set();
+        vfs.denied = new Set();
+      }
+      const hit = vfs.lockHit;
+      vfs.lockHit = null;
+      if (!hit || !snap) {
+        if (res.label) this.term.printAI(res.label, res.view);
+        return { output: res.output, exit_code: res.exit_code };
+      }
+      vfs.rollback(snap);
+      const ok = await confirmDialog({
+        title: 'AI가 잠긴 항목을 바꾸려고 해요',
+        message: `${hit.abs}${hit.lockPath !== hit.abs ? `\n(잠금: ${hit.lockPath})` : ''}`,
+        confirmText: '허용',
+      });
+      (ok ? approved : denied).add(hit.lockPath);
+      this.term.printAI(ok ? `승인: ${hit.lockPath}` : `거부: ${hit.lockPath}`, null);
+    }
+    return { output: '잠긴 항목 승인 요청이 너무 많아 중단했습니다.', exit_code: 1 };
+  },
+
+  /** 실제 실행 (터미널 출력은 runTool 이 마지막 결과만 표시) */
+  async execTool(call) {
     const a = call.args || {};
     try {
       if (call.name === 'sandbox_exec') {
         const cmd = String(a.command || '');
         const res = await this.shell.run(cmd, { source: 'ai' });
         if (res.clear) this.term.clear(), this.term.newPrompt();
-        this.term.printAI(`$ ${cmd}`, res);
         const text = stripAnsi(res.out) + (res.err ? (res.out ? '\n' : '') + stripAnsi(res.err) : '');
-        return { output: text.slice(0, 12000) || '(출력 없음)', exit_code: res.code };
+        return { output: text.slice(0, 12000) || '(출력 없음)', exit_code: res.code, label: `$ ${cmd}`, view: res };
       }
       if (call.name === 'write_file') {
         const abs = this.vfs.resolve(String(a.path || ''), '/user');
         const content = String(a.content ?? '');
         this.vfs.writeText(abs, content, { mkdirp: true });
-        this.term.printAI(`파일 작성 ${abs}`, { out: `\x1b[90m${content.length}자 저장\x1b[0m` });
-        return { output: `${abs} 에 저장했습니다 (${new Blob([content]).size} bytes).`, exit_code: 0 };
+        return { output: `${abs} 에 저장했습니다 (${new Blob([content]).size} bytes).`, exit_code: 0, label: `파일 작성 ${abs}`, view: { out: `\x1b[90m${content.length}자\x1b[0m` } };
       }
       if (call.name === 'read_file') {
         const abs = this.vfs.resolve(String(a.path || ''), '/user');
         const text = this.vfs.readText(abs);
-        this.term.printAI(`파일 읽기 ${abs}`, { out: `\x1b[90m${text.length}자\x1b[0m` });
-        return { output: text.slice(0, 12000) + (text.length > 12000 ? `\n…(${text.length - 12000}자 생략)` : ''), exit_code: 0 };
+        return { output: text.slice(0, 12000) + (text.length > 12000 ? `\n…(${text.length - 12000}자 생략)` : ''), exit_code: 0, label: `파일 읽기 ${abs}`, view: { out: `\x1b[90m${text.length}자\x1b[0m` } };
       }
       return { output: `알 수 없는 도구: ${call.name}`, exit_code: 1 };
     } catch (e) {
-      this.term.printAI(`${call.name} 실패`, { err: e.message });
-      return { output: `오류: ${e.message}`, exit_code: 1 };
+      return { output: `오류: ${e.message}`, exit_code: 1, label: `${call.name} 실패`, view: { err: e.message } };
     }
   },
 
@@ -312,85 +341,12 @@ export const sandbox = {
       if (typeof att.text === 'string') this.vfs.writeText(`/user/upload/${name}`, att.text, { mkdirp: true });
       else if (att.data) this.vfs.writeBinary(`/user/upload/${name}`, att.data, att.mime);
     } catch (e) {
-      toast(`샌드박스에 첨부 파일을 복사하지 못했습니다: ${e.message}`, 'error');
+      toast(`샌드박스에 복사하지 못했어요: ${e.message}`, 'error');
     }
   },
 
   renderFiles() {
-    const box = $('#sbxFiles');
-    if (!box || !this.vfs || $('#sandbox').hidden) return;
-    box.innerHTML = '';
-    const build = (abs, node, depth) => {
-      const name = abs === '/' ? '/' : abs.split('/').pop();
-      if (node.type === 'dir') {
-        const open = this.expanded.has(abs);
-        const btn = h('button', { class: 'ft-item dir', title: abs, html: icon(open ? 'folder' : 'folder') + `<span>${esc(name)}</span>` });
-        btn.onclick = () => {
-          open ? this.expanded.delete(abs) : this.expanded.add(abs);
-          this.renderFiles();
-        };
-        const wrap = h('div', {}, btn);
-        if (open && depth < 12) {
-          const kids = h('div', { class: 'ft-children' });
-          for (const k of Object.keys(node.children).sort((a, b) => {
-            const da = node.children[a].type === 'dir';
-            const db = node.children[b].type === 'dir';
-            return da === db ? a.localeCompare(b) : da ? -1 : 1;
-          })) kids.append(build((abs === '/' ? '' : abs) + '/' + k, node.children[k], depth + 1));
-          if (!kids.childNodes.length) kids.append(h('div', { class: 'ft-item', style: { color: 'var(--faint)' } }, '(비어 있음)'));
-          wrap.append(kids);
-        }
-        return wrap;
-      }
-      const btn = h('button', { class: 'ft-item', title: abs, html: icon(node.binary && /^image\//.test(node.mime || '') ? 'image' : 'file') + `<span>${esc(name)}</span>` });
-      btn.onclick = () => this.preview(abs);
-      return btn;
-    };
-    box.append(build('/user', this.vfs.get('/user'), 0));
-    if (this.vfs.get('/tmp')) box.append(build('/tmp', this.vfs.get('/tmp'), 0));
-  },
-
-  preview(abs) {
-    const n = this.vfs.get(abs);
-    if (!n || n.type !== 'file') return;
-    const wrap = h('div', { class: 'preview' });
-    const close = () => wrap.remove();
-    const body = n.binary && /^image\//.test(n.mime || '')
-      ? h('div', { style: { padding: '12px', overflow: 'auto' } }, h('img', { src: `data:${n.mime};base64,${n.data}`, alt: abs }))
-      : h('pre', {}, n.binary ? `[바이너리 파일: ${n.mime}]` : (n.content || '').slice(0, 200000) || '(빈 파일)');
-    const dl = h('button', { class: 'btn btn-sm', html: icon('download') + '<span>내려받기</span>', onclick: () => this.download(abs) });
-    const del = h('button', {
-      class: 'btn btn-sm btn-danger', html: icon('trash') + '<span>삭제</span>',
-      onclick: () => {
-        try {
-          this.vfs.rm(abs);
-          close();
-        } catch (e) {
-          toast(e.message, 'error');
-        }
-      },
-    });
-    const x = h('button', { class: 'icon-btn', 'aria-label': '닫기', html: icon('x'), onclick: close });
-    wrap.append(h('div', { class: 'preview-box', role: 'dialog', 'aria-label': abs }, h('header', {}, h('b', {}, abs), h('div', { class: 'row' }, dl, del, x)), body));
-    wrap.addEventListener('pointerdown', (e) => {
-      if (e.target === wrap) close();
-    });
-    wrap.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') close();
-    });
-    document.body.append(wrap);
-    x.focus();
-  },
-
-  download(abs) {
-    const n = this.vfs.get(abs);
-    if (!n || n.type !== 'file') return;
-    const blob = n.binary ? new Blob([b64ToBytes(n.data)], { type: n.mime }) : new Blob([n.content || ''], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = h('a', { href: url, download: abs.split('/').pop() });
-    document.body.append(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    if (!this.fm || $('#sandbox').hidden) return;
+    this.fm.render();
   },
 };
