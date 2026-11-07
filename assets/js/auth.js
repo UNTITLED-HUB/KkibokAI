@@ -1,10 +1,10 @@
 // 로그인 / 회원가입 화면
 //  - 회원가입: 칸을 벗어날 때 조건 검사 → 빨강(경고) / 초록(충족), 비밀번호 안전도 표시
 //  - 로그인 실패 시: 서버가 정한 대기 시간(4초부터 2배씩, 최대 1024초) 동안 버튼 잠금 + hCAPTCHA 요구
-import { api, session } from './api.js';
-import { mountCaptcha } from './captcha.js';
-import { $, $$, setIcon } from './ui.js';
-import { bindField, checkPassword, checkUsername, strengthMeter, validateAll } from './validate.js';
+import { api, session } from './api.js?v=1.5.0';
+import { mountCaptcha } from './captcha.js?v=1.5.0';
+import { $, $$, setIcon } from './ui.js?v=1.5.0';
+import { bindField, checkPassword, checkUsername, strengthMeter, validateAll } from './validate.js?v=1.5.0';
 
 // ---------------- 기기 ID (기기당 회원가입 1회) ----------------
 // 브라우저 저장소 3곳(localStorage·쿠키·IndexedDB)에 같은 값을 보관해, 한 곳이 지워져도 다시 복원한다.

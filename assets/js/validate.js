@@ -1,5 +1,5 @@
 // 입력 검증: 사용자 이름·비밀번호 규칙, 칸 상태(빨강/초록), 비밀번호 안전도
-import { h } from './ui.js';
+import { h } from './ui.js?v=1.5.0';
 
 export const USERNAME_HINT = '영문·숫자 8~24자, 밑줄(_) 1개까지';
 export const PASSWORD_HINT = '8~32자, 영문+숫자 포함';

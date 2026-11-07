@@ -1,5 +1,5 @@
 // 마크다운 렌더링 (marked + DOMPurify + highlight.js)
-import { esc, icon } from './ui.js';
+import { esc, icon } from './ui.js?v=1.5.0';
 
 let hooked = false;
 

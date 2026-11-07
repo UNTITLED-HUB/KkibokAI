@@ -1,5 +1,5 @@
 // 가상 셸 — 파이프(|), 리다이렉션(> >> < 2> 2>&1), &&, ||, ;, 따옴표, $변수, 와일드카드(*, ?) 지원
-import { FsError, MAX_BYTES, nodeSize } from './vfs.js';
+import { FsError, MAX_BYTES, nodeSize } from './vfs.js?v=1.5.0';
 
 export const stripAnsi = (s) => String(s || '').replace(/\x1b\[[0-9;]*m/g, '');
 const C = {

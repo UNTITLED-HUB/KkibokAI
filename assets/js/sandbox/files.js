@@ -1,9 +1,9 @@
 // Sandbox 파일 관리자: 트리 · 보기/편집 · 업로드 · 다운로드 · 잠금 · 백업 · 휴지통 · 서버 전송
-import { session } from '../api.js';
-import { CONFIG } from '../config.js';
-import { confirmDialog, esc, fmtBytes, fmtTime, h, icon, openMenu, promptDialog, toast } from '../ui.js';
-import { archiveBase, archiveKind, entryBytes, makeZip, readArchive } from './archive.js';
-import { bytesToB64, guessMime, MAX_BYTES, nodeSize, TRASH_DAYS } from './vfs.js';
+import { session } from '../api.js?v=1.5.0';
+import { CONFIG } from '../config.js?v=1.5.0';
+import { confirmDialog, esc, fmtBytes, fmtTime, h, icon, openMenu, promptDialog, toast } from '../ui.js?v=1.5.0';
+import { archiveBase, archiveKind, entryBytes, makeZip, readArchive } from './archive.js?v=1.5.0';
+import { bytesToB64, guessMime, MAX_BYTES, nodeSize, TRASH_DAYS } from './vfs.js?v=1.5.0';
 
 const SERVER_LIMIT = 30 * 1024 * 1024;
 const SERVER_FILE_MAX = 10 * 1024 * 1024;

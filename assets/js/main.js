@@ -1,14 +1,14 @@
 // 앱 시작
-import { api, session } from './api.js';
-import { showAuth } from './auth.js';
-import { chat } from './chat.js';
-import { composer } from './composer.js';
-import { live } from './live.js';
-import { applySettings, panels } from './panels.js';
-import { sandbox } from './sandbox/index.js';
-import { sidebar } from './sidebar.js';
-import { store } from './store.js';
-import { $, hydrateIcons, toast } from './ui.js';
+import { api, session } from './api.js?v=1.5.0';
+import { showAuth } from './auth.js?v=1.5.0';
+import { chat } from './chat.js?v=1.5.0';
+import { composer } from './composer.js?v=1.5.0';
+import { live } from './live.js?v=1.5.0';
+import { applySettings, panels } from './panels.js?v=1.5.0';
+import { sandbox } from './sandbox/index.js?v=1.5.0';
+import { sidebar } from './sidebar.js?v=1.5.0';
+import { store } from './store.js?v=1.5.0';
+import { $, hydrateIcons, toast } from './ui.js?v=1.5.0';
 
 let started = false;
 

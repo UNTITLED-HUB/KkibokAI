@@ -1,8 +1,8 @@
 // Sandbox Linux: 터미널 UI + 파일 탐색 + AI 도구 실행 연결
-import { $, confirmDialog, esc, h, toast } from '../ui.js';
-import { FileManager } from './files.js';
-import { Shell, stripAnsi } from './shell.js';
-import { VFS } from './vfs.js';
+import { $, confirmDialog, esc, h, toast } from '../ui.js?v=1.5.0';
+import { FileManager } from './files.js?v=1.5.0';
+import { Shell, stripAnsi } from './shell.js?v=1.5.0';
+import { VFS } from './vfs.js?v=1.5.0';
 
 // ---------- ANSI → HTML ----------
 function ansiToHtml(s) {
