@@ -32,7 +32,6 @@
         <svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 22 12 12 22 2 12Z" /></svg>
         <span>KkibokAI</span>
       </div>
-      <p class="auth-lead">대화하고, 만들고, 말로 물어보세요.</p>
       <div class="tabs" role="tablist">
         <button role="tab" id="tabLogin" aria-selected="true" data-tab="login">로그인</button>
         <button role="tab" id="tabSignup" aria-selected="false" data-tab="signup">회원가입</button>
@@ -41,7 +40,7 @@
         <label class="field">
           <span>사용자 이름</span>
           <input id="authUser" name="username" autocomplete="username" maxlength="24" spellcheck="false" autocapitalize="off" required />
-          <small class="hint" data-for="signup">영문·숫자 8~24자, 밑줄(_)은 한 번만 쓸 수 있어요</small>
+          <small class="hint" data-for="signup">영문·숫자 8~24자, 밑줄(_) 1개까지</small>
         </label>
         <label class="field">
           <span>비밀번호</span>
@@ -49,13 +48,13 @@
             <input id="authPass" name="password" type="password" autocomplete="current-password" maxlength="32" required />
             <button type="button" class="icon-btn pw-toggle" aria-label="비밀번호 보기" data-icon="eye"></button>
           </div>
-          <small class="hint" data-for="signup">8~32자, 영문과 숫자를 각각 1자 이상 (공백·한글 제외)</small>
+          <small class="hint" data-for="signup">8~32자, 영문+숫자 포함</small>
           <div id="authStrength" data-for="signup"></div>
         </label>
         <label class="field" data-for="signup">
           <span>비밀번호 확인</span>
           <input id="authPass2" type="password" autocomplete="new-password" maxlength="32" />
-          <small class="hint">위와 같은 비밀번호를 한 번 더 입력해 주세요</small>
+          <small class="hint"></small>
         </label>
         <div id="authCaptcha" class="captcha" data-for="signup"></div>
         <div id="loginGuard" class="login-guard" hidden>
@@ -108,9 +107,6 @@
       <div id="thread" class="thread">
         <div id="empty" class="empty">
           <svg class="mark mark-xl" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 22 12 12 22 2 12Z" /></svg>
-          <h2 id="emptyHello">무엇이든 물어보세요</h2>
-          <p class="empty-sub">가벼운 질문은 <b class="m-nb">NO BRAIN</b>, 만들고 조사하는 일은 <b class="m-work">WORK</b>로 맡겨 보세요.</p>
-          <div class="examples" id="examples"></div>
         </div>
         <div id="messages" class="messages" aria-live="polite"></div>
         <button id="toBottom" class="to-bottom" aria-label="맨 아래로" hidden data-icon="arrow-down"></button>
@@ -134,7 +130,7 @@
           <button id="btnAttach" class="icon-btn round" aria-label="파일 첨부" title="파일 첨부" data-icon="paperclip"></button>
           <input id="fileInput" type="file" multiple hidden />
           <div class="input-box">
-            <textarea id="prompt" rows="1" placeholder="무엇이든 물어보세요" aria-label="메시지 입력" maxlength="40000"></textarea>
+            <textarea id="prompt" rows="1" placeholder="메시지 입력" aria-label="메시지 입력" maxlength="40000"></textarea>
             <button id="btnSend" class="send-btn" aria-label="보내기" title="보내기" data-icon="send" disabled></button>
           </div>
           <button id="btnMic" class="icon-btn round" aria-label="음성으로 보내기" title="음성 전송" data-icon="mic"></button>
@@ -143,7 +139,7 @@
           </button>
         </div>
         <div id="recBar" class="rec-bar" hidden>
-          <span class="rec-dot"></span><span id="recTime">0:00</span><span class="rec-label">녹음 중 — 다시 누르면 전송</span>
+          <span class="rec-dot"></span><span id="recTime">0:00</span><span class="rec-label">녹음 중</span>
           <button id="recCancel" class="btn btn-ghost btn-sm">취소</button>
         </div>
       </footer>
