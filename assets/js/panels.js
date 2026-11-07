@@ -5,6 +5,7 @@ import { chat } from './chat.js';
 import { sandbox } from './sandbox/index.js';
 import { local, store } from './store.js';
 import { $, confirmDialog, debounce, fmtBytes, fmtTime, fmtTokens, fmtWait, h, icon, promptDialog, toast } from './ui.js';
+import { bindField, checkPassword, checkUsername, PASSWORD_HINT, strengthMeter, USERNAME_HINT, validateAll } from './validate.js';
 import { tts } from './voice.js';
 
 const PURPOSE = {
@@ -101,26 +102,31 @@ export const panels = {
     };
 
     // 사용자 이름
-    const nameIn = h('input', { maxlength: 24, autocomplete: 'off', spellcheck: 'false', value: u.username });
+    const nameIn = h('input', { maxlength: 24, autocomplete: 'off', spellcheck: 'false', autocapitalize: 'off', value: u.username });
     const nameErr = h('p', { class: 'form-error', role: 'alert' });
     const nameBtn = h('button', { class: 'btn' }, '사용자 이름 변경');
     const nameCd = u.cooldowns.username_seconds;
+    const nameField = field('새 사용자 이름', nameIn, `${USERNAME_HINT} · 7일에 한 번 바꿀 수 있어요`);
     body.append(group('사용자 이름 변경',
-      field('새 사용자 이름', nameIn, '영문만 8~24자 · 7일에 한 번 바꿀 수 있어요'),
+      nameField,
       nameCd ? h('p', { class: 'cooldown' }, `${fmtWait(nameCd)} 후에 다시 바꿀 수 있어요.`) : null,
       nameErr, nameBtn));
+    const fName = bindField(nameIn, () => {
+      const v = nameIn.value.trim();
+      return checkUsername(v) || (v === u.username ? '지금 쓰고 있는 이름과 같아요.' : '');
+    });
     nameBtn.onclick = () => busyBtn(nameBtn, async () => {
       nameErr.textContent = '';
-      const v = nameIn.value.trim();
-      if (!/^[A-Za-z]{8,24}$/.test(v)) return (nameErr.textContent = '사용자 이름은 영문 8~24자여야 합니다.');
+      if (!validateAll([[nameIn, fName]])) return;
       try {
-        const r = await api.post('/account/username', { username: v, captcha: needToken() });
+        const r = await api.post('/account/username', { username: nameIn.value.trim(), captcha: needToken() });
         store.user = r.user;
         store.emit('user');
         toast('사용자 이름을 바꿨어요.');
         this.open('account');
       } catch (e) {
         nameErr.textContent = e.message;
+        if (e.code === 'USERNAME_TAKEN') nameIn.dataset.state = 'invalid';
         cap.reset();
       }
     });
@@ -132,25 +138,32 @@ export const panels = {
     const pwErr = h('p', { class: 'form-error', role: 'alert' });
     const pwBtn = h('button', { class: 'btn' }, '비밀번호 변경');
     const pwCd = u.cooldowns.password_seconds;
+    const meter = strengthMeter();
+    const nwField = field('새 비밀번호', nw, `${PASSWORD_HINT} · 3분에 한 번`);
+    nwField.append(meter);
     body.append(group('비밀번호 변경',
-      field('현재 비밀번호', cur),
-      field('새 비밀번호', nw, '8~32자, 영문과 숫자를 각각 1자 이상 · 3분에 한 번'),
-      field('새 비밀번호 확인', nw2),
+      field('현재 비밀번호', cur, ' '),
+      nwField,
+      field('새 비밀번호 확인', nw2, '위와 같은 비밀번호를 한 번 더 입력해 주세요'),
       pwCd ? h('p', { class: 'cooldown' }, `${fmtWait(pwCd)} 후에 다시 바꿀 수 있어요.`) : null,
       pwErr, pwBtn));
+    const fCur = bindField(cur, () => (cur.value ? '' : '현재 비밀번호를 입력해 주세요.'), { okText: ' ' });
+    const fNw = bindField(nw, () => checkPassword(nw.value) || (nw.value && nw.value === cur.value ? '현재 비밀번호와 다른 비밀번호를 써 주세요.' : ''));
+    const fNw2 = bindField(nw2, () => (!nw2.value ? '새 비밀번호를 한 번 더 입력해 주세요.' : nw2.value === nw.value ? '' : '새 비밀번호가 서로 달라요.'), { okText: '비밀번호가 일치해요' });
+    nw.addEventListener('input', () => {
+      meter.update(nw.value, u.username);
+      fNw2.refresh();
+    });
     pwBtn.onclick = () => busyBtn(pwBtn, async () => {
       pwErr.textContent = '';
-      const p = nw.value;
-      if (p.length < 8 || p.length > 32 || !/[A-Za-z]/.test(p) || !/\d/.test(p) || /[^\x21-\x7E]/.test(p)) {
-        return (pwErr.textContent = '비밀번호는 8~32자이며 영문과 숫자를 각각 1자 이상 포함해야 합니다(공백 제외).');
-      }
-      if (p !== nw2.value) return (pwErr.textContent = '새 비밀번호가 서로 다릅니다.');
+      if (!validateAll([[cur, fCur], [nw, fNw], [nw2, fNw2]])) return;
       try {
-        await api.post('/account/password', { current_password: cur.value, new_password: p, captcha: needToken() });
+        await api.post('/account/password', { current_password: cur.value, new_password: nw.value, captcha: needToken() });
         toast('비밀번호를 바꿨어요. 다른 기기의 로그인은 모두 해제됐어요.');
         this.open('account');
       } catch (e) {
         pwErr.textContent = e.message;
+        if (e.code === 'WRONG_PASSWORD') cur.dataset.state = 'invalid';
         cap.reset();
       }
     });
