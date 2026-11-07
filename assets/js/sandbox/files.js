@@ -1,9 +1,9 @@
 // Sandbox 파일 관리자: 트리 · 보기/편집 · 업로드 · 다운로드 · 잠금 · 백업 · 휴지통 · 서버 전송
-import { session } from '../api.js?v=1.5.0';
-import { CONFIG } from '../config.js?v=1.5.0';
-import { confirmDialog, esc, fmtBytes, fmtTime, h, icon, openMenu, promptDialog, toast } from '../ui.js?v=1.5.0';
-import { archiveBase, archiveKind, entryBytes, makeZip, readArchive } from './archive.js?v=1.5.0';
-import { bytesToB64, guessMime, MAX_BYTES, nodeSize, TRASH_DAYS } from './vfs.js?v=1.5.0';
+import { session } from '../api.js?v=1.5.1';
+import { CONFIG } from '../config.js?v=1.5.1';
+import { confirmDialog, esc, fmtBytes, fmtTime, h, icon, openMenu, promptDialog, toast } from '../ui.js?v=1.5.1';
+import { archiveBase, archiveKind, entryBytes, makeZip, readArchive } from './archive.js?v=1.5.1';
+import { bytesToB64, guessMime, MAX_BYTES, nodeSize, TRASH_DAYS } from './vfs.js?v=1.5.1';
 
 const SERVER_LIMIT = 30 * 1024 * 1024;
 const SERVER_FILE_MAX = 10 * 1024 * 1024;
@@ -128,6 +128,7 @@ export class FileManager {
         { label: '파일 올리기', icon: 'file', onClick: () => this.pick(false) },
         { label: '폴더 올리기', icon: 'folder', onClick: () => this.pick(true) },
       ])),
+      iconBtn('서버 파일', 'cloud', () => this.showServer()),
       iconBtn('더 보기', 'more', (e) => openMenu(e.currentTarget, [
         { label: `휴지통 (${this.vfs.trash.length})`, icon: 'trash', onClick: () => this.showTrash() },
         { label: `백업 (${this.vfs.backups.length})`, icon: 'archive', onClick: () => this.showBackups() },
@@ -331,6 +332,10 @@ export class FileManager {
         const abs = this.vfs.uniquePath(this.vfs.resolve(rel, destDir));
         this.vfs.writeBytes(abs, new Uint8Array(await file.arrayBuffer()), file.type);
         ok++;
+        if (file.size <= 500 * 1024) {
+          try { await remote.put(abs, this.vfs.readBytes(abs), file.type || 'application/octet-stream'); }
+          catch (e) { errors.push(`${rel}: 서버 자동 저장 실패 (${e.message})`); }
+        }
       } catch (e) {
         errors.push(`${rel}: ${e.message}`);
         if (/저장 공간/.test(e.message)) break;
@@ -422,6 +427,19 @@ export class FileManager {
             } catch (e) {
               toast(e.message, 'error');
             }
+          }),
+          btn('수정', 'edit', async () => {
+            try {
+              const blob = await remote.get(f.path);
+              if (blob.size > 500 * 1024 || (!blob.type.startsWith('text/') && !/\.(txt|md|js|ts|json|html|css|py|sql|csv|sh)$/i.test(f.path))) throw new Error('500KB 이하 텍스트 파일을 수정할 수 있어요.');
+              const editor = modal(short(f.path));
+              const input = h('textarea', { class: 'remote-editor', 'aria-label': '파일 내용' }); input.value = await blob.text();
+              editor.body.append(input);
+              editor.setActions(btn('저장', 'save', async () => {
+                try { await remote.put(f.path, new TextEncoder().encode(input.value), blob.type || 'text/plain'); toast('저장했어요'); editor.close(); load(); }
+                catch (e) { toast(e.message, 'error'); }
+              })); editor.focus();
+            } catch (e) { toast(e.message, 'error'); }
           }),
           iconBtn('서버에서 삭제', 'trash', async () => {
             if (!(await confirmDialog({ title: '서버에서 삭제할까요?', message: short(f.path), confirmText: '삭제', danger: true }))) return;
