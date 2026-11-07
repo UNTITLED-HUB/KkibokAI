@@ -1,24 +1,24 @@
 // 입력 검증: 사용자 이름·비밀번호 규칙, 칸 상태(빨강/초록), 비밀번호 안전도
 import { h } from './ui.js';
 
-export const USERNAME_HINT = '영문·숫자 8~24자, 밑줄(_)은 한 번만 쓸 수 있어요';
-export const PASSWORD_HINT = '8~32자, 영문과 숫자를 각각 1자 이상 (공백·한글 제외)';
+export const USERNAME_HINT = '영문·숫자 8~24자, 밑줄(_) 1개까지';
+export const PASSWORD_HINT = '8~32자, 영문+숫자 포함';
 
 /** 규칙에 맞으면 '' , 아니면 이유 */
 export function checkUsername(v) {
   if (!v) return '사용자 이름을 입력해 주세요.';
-  if (/[^A-Za-z0-9_]/.test(v)) return '영문, 숫자, 밑줄(_)만 쓸 수 있어요.';
-  if ((v.match(/_/g) || []).length > 1) return '밑줄(_)은 한 번만 쓸 수 있어요.';
-  if (v.length < 8 || v.length > 24) return `8~24자로 입력해 주세요. (지금 ${v.length}자)`;
+  if (/[^A-Za-z0-9_]/.test(v)) return '영문·숫자·밑줄(_)만 쓸 수 있어요.';
+  if ((v.match(/_/g) || []).length > 1) return '밑줄(_)은 1개까지예요.';
+  if (v.length < 8 || v.length > 24) return `8~24자 (지금 ${v.length}자)`;
   return '';
 }
 
 export function checkPassword(v) {
   if (!v) return '비밀번호를 입력해 주세요.';
-  if (/[^\x21-\x7E]/.test(v)) return '공백이나 한글 같은 문자는 쓸 수 없어요.';
-  if (v.length < 8 || v.length > 32) return `8~32자로 입력해 주세요. (지금 ${v.length}자)`;
-  if (!/[A-Za-z]/.test(v)) return '영문을 1자 이상 넣어 주세요.';
-  if (!/\d/.test(v)) return '숫자를 1자 이상 넣어 주세요.';
+  if (/[^\x21-\x7E]/.test(v)) return '공백·한글은 쓸 수 없어요.';
+  if (v.length < 8 || v.length > 32) return `8~32자 (지금 ${v.length}자)`;
+  if (!/[A-Za-z]/.test(v)) return '영문을 넣어 주세요.';
+  if (!/\d/.test(v)) return '숫자를 넣어 주세요.';
   return '';
 }
 

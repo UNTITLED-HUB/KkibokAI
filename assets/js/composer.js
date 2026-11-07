@@ -92,7 +92,7 @@ export const composer = {
       e.preventDefault();
       dragDepth++;
       if (!hint) {
-        hint = h('div', { class: 'drop-hint' }, '여기에 놓으면 첨부됩니다');
+        hint = h('div', { class: 'drop-hint' }, '놓아서 첨부');
         main.append(hint);
       }
     });
@@ -153,7 +153,7 @@ export const composer = {
     $$('#subModes [data-sub]').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.sub === store.submode)));
     $('#subModes').hidden = !work;
     document.body.dataset.modeColor = modeKey(store.mode, store.submode);
-    this.ta.placeholder = work ? '무엇을 만들거나 조사할까요?' : '무엇이든 물어보세요';
+    this.ta.placeholder = work ? '메시지 입력' : '메시지 입력';
   },
 
   autosize() {
@@ -187,7 +187,7 @@ export const composer = {
   async addFiles(list) {
     for (const f of list) {
       if (this.files.length >= MAX_FILES) {
-        toast(`파일은 최대 ${MAX_FILES}개까지 첨부할 수 있어요.`, 'error');
+        toast(`최대 ${MAX_FILES}개까지 첨부할 수 있어요.`, 'error');
         break;
       }
       try {
@@ -195,12 +195,12 @@ export const composer = {
         const isPdf = f.type === 'application/pdf';
         const isText = !isImg && !isPdf && (f.type.startsWith('text/') || TEXT_EXT.test(f.name) || f.type === 'application/json');
         if (!isImg && !isPdf && !isText) {
-          toast(`지원하지 않는 형식이에요: ${f.name} (이미지, PDF, 텍스트·코드 파일 가능)`, 'error');
+          toast(`지원하지 않는 형식: ${f.name}`, 'error');
           continue;
         }
         if (isText) {
           if (f.size > 1024 * 1024) {
-            toast(`텍스트 파일이 너무 커요(최대 1MB): ${f.name}`, 'error');
+            toast(`1MB 초과: ${f.name}`, 'error');
             continue;
           }
           const text = await readAs(f, 'text');
@@ -217,7 +217,7 @@ export const composer = {
           const data = String(dataUrl).split(',')[1] || '';
           const size = Math.floor(data.length * 0.75);
           if (size > MAX_BYTES) {
-            toast(`파일이 너무 커요(최대 5MB): ${f.name}`, 'error');
+            toast(`5MB 초과: ${f.name}`, 'error');
             continue;
           }
           this.files.push({ name, mime, size, kind: isImg ? 'image' : 'pdf', data, preview: isImg ? dataUrl : null });
@@ -293,12 +293,12 @@ export const composer = {
       return;
     }
     const prev = this.ta.placeholder;
-    this.ta.placeholder = '음성을 글자로 바꾸는 중…';
+    this.ta.placeholder = '변환 중…';
     $('#btnMic').disabled = true;
     try {
       const text = await transcribe(blob);
       if (!text) {
-        toast('음성을 알아듣지 못했어요. 다시 시도해 주세요.');
+        toast('알아듣지 못했어요.');
         return;
       }
       const extra = this.ta.value.trim();

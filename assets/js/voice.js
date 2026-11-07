@@ -115,12 +115,12 @@ export const recorderSupported = !!(navigator.mediaDevices?.getUserMedia && wind
 
 /** 녹음 시작 → { stop(): Promise<Blob>, cancel(), level(): 0~1 } */
 export async function startRecording({ onLevel } = {}) {
-  if (!recorderSupported) throw new Error('이 브라우저는 녹음을 지원하지 않습니다.');
+  if (!recorderSupported) throw new Error('녹음을 지원하지 않는 브라우저예요.');
   let stream;
   try {
     stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
   } catch {
-    throw new Error('마이크 권한이 필요합니다. 브라우저 설정에서 마이크를 허용해 주세요.');
+    throw new Error('마이크 권한이 필요해요.');
   }
   const mime = pickMime();
   const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);

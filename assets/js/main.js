@@ -59,7 +59,7 @@ function route() {
 window.addEventListener('kb:unauthorized', () => {
   if (!session.token) return;
   session.clear();
-  toast('로그인이 만료되었어요. 다시 로그인해 주세요.', 'error');
+  toast('다시 로그인해 주세요.', 'error');
   setTimeout(() => location.replace(location.pathname), 1200);
 });
 

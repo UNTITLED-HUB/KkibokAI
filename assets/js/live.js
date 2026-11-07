@@ -38,14 +38,14 @@ export const live = {
 
   async open() {
     if (store.busy) {
-      toast('진행 중인 답변이 끝난 뒤 LIVE를 시작할 수 있어요.');
+      toast('답변이 끝난 뒤에 할 수 있어요.');
       return;
     }
     if (!SpeechRec && !navigator.mediaDevices?.getUserMedia) {
-      toast('이 브라우저는 음성 입력을 지원하지 않습니다.', 'error');
+      toast('음성 입력을 지원하지 않는 브라우저예요.', 'error');
       return;
     }
-    if (!tts.supported) toast('이 브라우저는 음성 읽기를 지원하지 않아 답변은 화면에만 표시됩니다.');
+    if (!tts.supported) toast('음성 읽기 미지원 · 답변은 화면에만 표시돼요.');
     this.active = true;
     this.paused = false;
     this.session++;
@@ -113,7 +113,7 @@ export const live = {
     };
     r.onerror = (e) => {
       if (e.error === 'not-allowed') {
-        toast('마이크 권한이 필요합니다.', 'error');
+        toast('마이크 권한이 필요해요.', 'error');
         this.close();
       } else if (['network', 'service-not-allowed', 'language-not-supported', 'audio-capture'].includes(e.error)) {
         // 브라우저 음성 인식을 쓸 수 없으면 녹음 + 서버 인식으로 전환

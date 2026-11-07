@@ -86,7 +86,7 @@ export const sidebar = {
     const ul = $('#chatList');
     ul.innerHTML = '';
     if (!store.chats.length) {
-      ul.append(h('li', { class: 'chat-empty' }, '아직 채팅이 없어요.'));
+      ul.append(h('li', { class: 'chat-empty' }, '채팅 없음'));
       return;
     }
     for (const c of store.chats) {
@@ -111,7 +111,7 @@ export const sidebar = {
   },
 
   async rename(c) {
-    const title = await promptDialog({ title: '채팅 이름 바꾸기', value: c.title, maxLength: 80 });
+    const title = await promptDialog({ title: '이름 변경', value: c.title, maxLength: 80 });
     if (!title || title === c.title) return;
     try {
       await api.patch(`/chats/${c.id}`, { title });
@@ -125,16 +125,16 @@ export const sidebar = {
 
   async remove(c) {
     if (store.busy && store.chatId === c.id) {
-      toast('답변이 끝난 뒤 삭제할 수 있어요.');
+      toast('답변이 끝난 뒤에 할 수 있어요.');
       return;
     }
-    if (!(await confirmDialog({ title: '채팅을 삭제할까요?', message: `"${c.title}" 채팅과 첨부 파일이 영구 삭제됩니다.`, confirmText: '삭제', danger: true }))) return;
+    if (!(await confirmDialog({ title: '채팅을 삭제할까요?', message: `"${c.title}" · 되돌릴 수 없어요.`, confirmText: '삭제', danger: true }))) return;
     try {
       await api.del(`/chats/${c.id}`);
       store.chats = store.chats.filter((x) => x.id !== c.id);
       if (store.chatId === c.id) chat.newChat();
       this.renderList();
-      toast('채팅을 삭제했어요.');
+      toast('삭제했어요');
     } catch (e) {
       toast(e.message, 'error');
     }
@@ -145,7 +145,7 @@ export const sidebar = {
     for (const el of $$('.token-chip')) {
       el.innerHTML = `<span class="dot"></span>${fmtTokens(t)}`;
       el.classList.toggle('low', t < 25);
-      el.title = `남은 토큰 ${fmtTokens(t)} (일일 ${fmtTokens(store.balance.daily)} + 보너스 ${fmtTokens(store.balance.bonus)})`;
+      el.title = `일일 ${fmtTokens(store.balance.daily)} + 보너스 ${fmtTokens(store.balance.bonus)}`;
       el.setAttribute('aria-label', el.title);
     }
   },

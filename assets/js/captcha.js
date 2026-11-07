@@ -19,7 +19,7 @@ function load() {
       s.async = true;
       s.onerror = () => {
         loading = null;
-        reject(new Error('hCAPTCHA를 불러오지 못했습니다.'));
+        reject(new Error('hCAPTCHA를 불러오지 못했어요.'));
       };
       document.head.append(s);
     });
@@ -32,7 +32,7 @@ export async function mountCaptcha(container) {
   container.innerHTML = '';
   const key = sitekey();
   if (!key) {
-    container.append(h('div', { class: 'captcha-note' }, 'hCAPTCHA 사이트 키가 설정되지 않았습니다. 관리자에게 문의하세요.'));
+    container.append(h('div', { class: 'captcha-note' }, 'hCAPTCHA 사이트 키가 없어요.'));
     return { token: () => '', reset() {}, ok: false };
   }
   try {
@@ -47,7 +47,7 @@ export async function mountCaptcha(container) {
   try {
     id = window.hcaptcha.render(box, { sitekey: key, theme: 'dark' });
   } catch (e) {
-    container.append(h('div', { class: 'captcha-note' }, 'hCAPTCHA 위젯을 표시하지 못했습니다.'));
+    container.append(h('div', { class: 'captcha-note' }, 'hCAPTCHA를 표시하지 못했어요.'));
     return { token: () => '', reset() {}, ok: false };
   }
   return {

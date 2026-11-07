@@ -8,12 +8,6 @@ import {
 } from './ui.js';
 import { tts } from './voice.js';
 
-const EXAMPLES = [
-  { mode: 'nobrain', text: '오늘 저녁 메뉴 세 가지만 추천해줘' },
-  { mode: 'work', sub: 'fast', text: '자바스크립트로 숫자 맞히기 게임을 만들어서 /user/download 에 저장해줘' },
-  { mode: 'work', sub: 'think', text: '샌드박스 /user 폴더 구조를 살펴보고 정리 방법을 제안해줘' },
-];
-
 function thread() {
   return $('#thread');
 }
@@ -57,19 +51,7 @@ export const chat = {
     this.renderEmpty();
   },
 
-  renderEmpty() {
-    const box = $('#examples');
-    box.innerHTML = '';
-    for (const ex of EXAMPLES) {
-      const key = ex.mode === 'work' ? ex.sub : 'nobrain';
-      const b = h('button', { class: 'example', style: { '--ex': MODE_VAR[key] } },
-        h('span', { class: 'tag' }, ex.mode === 'work' ? `WORK ${ex.sub.toUpperCase()}` : 'NO BRAIN'), ex.text);
-      b.onclick = () => store.emit('example', ex);
-      box.append(b);
-    }
-    const name = store.user?.username;
-    $('#emptyHello').textContent = name ? `${name}님, 무엇이든 물어보세요` : '무엇이든 물어보세요';
-  },
+  renderEmpty() {},
 
   setTitle(title) {
     $('#chatTitle').textContent = !title || title === 'Unnamed Chat' ? (store.chatId ? 'Unnamed Chat' : '새 채팅') : title;
@@ -78,7 +60,7 @@ export const chat = {
 
   newChat() {
     if (store.busy) {
-      toast('답변이 끝난 뒤 새 채팅을 시작할 수 있어요.');
+      toast('답변이 끝난 뒤에 할 수 있어요.');
       return;
     }
     tts.stop();
@@ -92,7 +74,7 @@ export const chat = {
 
   async open(id) {
     if (store.busy) {
-      toast('답변이 끝난 뒤 다른 채팅으로 이동할 수 있어요.');
+      toast('답변이 끝난 뒤에 할 수 있어요.');
       return;
     }
     tts.stop();
@@ -289,7 +271,7 @@ export const chat = {
       return;
     }
     if (!tts.supported) {
-      toast('이 브라우저는 음성 읽기를 지원하지 않습니다.', 'error');
+      toast('음성 읽기를 지원하지 않는 브라우저예요.', 'error');
       return;
     }
     if (tts.speak(m.content, { onend: () => { this.readingId = null; this.refreshReadButtons(); } })) {
@@ -300,7 +282,7 @@ export const chat = {
 
   startEdit(m, el) {
     if (store.busy) {
-      toast('답변이 끝난 뒤 수정할 수 있어요.');
+      toast('답변이 끝난 뒤에 할 수 있어요.');
       return;
     }
     const bubble = el.querySelector('.bubble') || h('div', { class: 'bubble' });
@@ -330,7 +312,7 @@ export const chat = {
 
   retry(m) {
     if (store.busy) {
-      toast('답변이 끝난 뒤 다시 시도할 수 있어요.');
+      toast('답변이 끝난 뒤에 할 수 있어요.');
       return;
     }
     if (String(m.id).startsWith('tmp')) return;
@@ -345,7 +327,7 @@ export const chat = {
   // ---------------- 전송 ----------------
   async send({ content = '', attachments = [], editId = null, regenerateId = null, voice = false, hooks = {} } = {}) {
     if (store.busy) {
-      toast('답변을 만드는 중이에요. 잠시 후 다시 시도해 주세요.');
+      toast('답변을 만드는 중이에요.');
       return { text: '' };
     }
     tts.stop();
@@ -556,14 +538,14 @@ export const chat = {
     const box = $('#messages');
     const note = h('div', { class: 'notice', role: 'status' });
     if (run.status === 'running') {
-      note.append(h('p', { style: { margin: '0 0 10px' } }, '다른 창이나 기기에서 이 채팅의 WORK 작업이 진행 중이에요.'),
+      note.append(h('p', { style: { margin: '0 0 10px' } }, '다른 창에서 작업이 진행 중이에요.'),
         h('button', { class: 'btn btn-sm', onclick: () => this.open(store.chatId) }, '새로고침'));
       box.append(note);
       return;
     }
     const resume = h('button', { class: 'btn btn-primary btn-sm' }, '이어서 진행');
     const cancel = h('button', { class: 'btn btn-ghost btn-sm' }, '중지');
-    note.append(h('p', { style: { margin: '0 0 10px' } }, 'WORK 작업이 중간에 멈춰 있어요. 이어서 진행할까요?'), h('div', { class: 'row' }, resume, cancel));
+    note.append(h('p', { style: { margin: '0 0 10px' } }, '멈춘 작업을 이어서 할까요?'), h('div', { class: 'row' }, resume, cancel));
     box.append(note);
     scrollBottom(true);
     cancel.onclick = async () => {

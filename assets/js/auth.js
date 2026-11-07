@@ -89,9 +89,9 @@ export function showAuth(onSuccess) {
   const fUser = bindField(user, () => checkUsername(user.value.trim()), signupOnly);
   const fPass = bindField(pass, () => checkPassword(pass.value), signupOnly);
   const fPass2 = bindField(pass2, () => {
-    if (!pass2.value) return '비밀번호를 한 번 더 입력해 주세요.';
-    return pass2.value === pass.value ? '' : '비밀번호가 서로 달라요.';
-  }, { ...signupOnly, okText: '비밀번호가 일치해요', live: true });
+    if (!pass2.value) return '한 번 더 입력해 주세요.';
+    return pass2.value === pass.value ? '' : '비밀번호가 달라요.';
+  }, { ...signupOnly, okText: '일치해요', live: true });
   const meter = strengthMeter();
   $('#authStrength').append(meter);
   const paintMeter = () => meter.update(mode === 'signup' ? pass.value : '', user.value.trim());
@@ -132,8 +132,8 @@ export function showAuth(onSuccess) {
     submit.disabled = locked;
     submit.textContent = locked ? `${clock(left)} 후 다시 시도` : submitLabel();
     $('#loginWait').textContent = locked
-      ? `로그인에 실패해 잠시 기다려야 해요. ${clock(left)} 남았어요.`
-      : (loginCap ? '로그인에 실패한 적이 있어 hCAPTCHA 인증이 필요해요.' : '');
+      ? `${clock(left)} 후 다시 시도할 수 있어요.`
+      : (loginCap ? 'hCAPTCHA 인증이 필요해요.' : '');
     if (!left) {
       clearInterval(waitTimer);
       waitTimer = 0;
@@ -162,7 +162,7 @@ export function showAuth(onSuccess) {
     let captcha;
     if (mode === 'signup') {
       if (!validateAll([[user, fUser], [pass, fPass], [pass2, fPass2]])) {
-        err.textContent = '빨간색으로 표시된 칸을 확인해 주세요.';
+        err.textContent = '빨간 칸을 확인해 주세요.';
         return;
       }
       captcha = signupCap?.token();
@@ -193,7 +193,7 @@ export function showAuth(onSuccess) {
       if (mode === 'signup') {
         signupCap?.reset();
         if (ex.code === 'SIGNUP_COOLDOWN' && ex.extra?.wait_seconds) {
-          err.textContent = `같은 네트워크에서 방금 가입했어요. ${clock(Number(ex.extra.wait_seconds))} 후 다시 시도해 주세요.`;
+          err.textContent = `${clock(Number(ex.extra.wait_seconds))} 후 다시 가입할 수 있어요.`;
         }
         if (ex.code === 'USERNAME_TAKEN' || ex.code === 'INVALID_USERNAME') {
           user.dataset.state = 'invalid';
