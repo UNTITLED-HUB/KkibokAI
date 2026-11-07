@@ -576,3 +576,30 @@ input[type='range'] { accent-color: var(--live); width: 100%; }
 
 .auth-card .brand-lg { margin-bottom: 24px; }
 .empty .mark-xl { opacity: .28; }
+
+/* ---------- 작업 과정 (채팅 안 실시간 표시) ---------- */
+.activity { list-style: none; margin: 4px 0 12px; padding: 0; display: grid; gap: 4px; font-size: .88em; color: var(--text-2); }
+.steps .activity { margin: 8px 0 4px; }
+.act { display: grid; grid-template-columns: 18px 1fr; align-items: start; gap: 8px; min-width: 0; }
+.act .dot { width: 18px; height: 18px; display: grid; place-items: center; color: var(--ok); }
+.act .dot .ic { width: 13px; height: 13px; }
+.act .txt { min-width: 0; overflow-wrap: anywhere; line-height: 18px; }
+.act .txt code { font: 500 .92em var(--mono); background: var(--surface); border: 1px solid var(--line-soft); border-radius: 5px; padding: 0 5px; color: var(--text); }
+.act.now .txt { color: var(--text); }
+.act.more { display: block; color: var(--faint); padding-left: 26px; }
+.act-detail { grid-column: 2; }
+.act-detail summary { cursor: pointer; color: var(--faint); font-size: .92em; }
+.act-detail pre { margin: 4px 0 0; white-space: pre-wrap; font: 12px/1.5 var(--mono); color: var(--muted); }
+.spin { width: 12px; height: 12px; border-radius: 50%; border: 2px solid color-mix(in srgb, var(--tag, var(--live)) 30%, transparent); border-top-color: var(--tag, var(--live)); animation: spin .8s linear infinite; display: block; }
+
+/* ---------- 저장공간 관리 ---------- */
+.store-bar { justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.store-bar label { gap: 6px; color: var(--text-2); font-size: .9em; cursor: pointer; }
+.store-list li.store-row { display: flex; align-items: center; gap: 10px; }
+.store-row .t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.store-row .t b, .store-title { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; color: var(--text); }
+.store-title:hover { color: var(--live); }
+.store-row .sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.store-row .ficon { color: var(--muted); display: grid; }
+.store-row .ficon .ic { width: 16px; height: 16px; }
+.store-list li.more { justify-content: center; }
