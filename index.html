@@ -41,7 +41,7 @@
         <label class="field">
           <span>사용자 이름</span>
           <input id="authUser" name="username" autocomplete="username" maxlength="24" spellcheck="false" autocapitalize="off" required />
-          <small class="hint" data-for="signup">영문만 8~24자</small>
+          <small class="hint" data-for="signup">영문·숫자 8~24자, 밑줄(_)은 한 번만 쓸 수 있어요</small>
         </label>
         <label class="field">
           <span>비밀번호</span>
@@ -49,13 +49,19 @@
             <input id="authPass" name="password" type="password" autocomplete="current-password" maxlength="32" required />
             <button type="button" class="icon-btn pw-toggle" aria-label="비밀번호 보기" data-icon="eye"></button>
           </div>
-          <small class="hint" data-for="signup">8~32자, 영문과 숫자를 각각 1자 이상</small>
+          <small class="hint" data-for="signup">8~32자, 영문과 숫자를 각각 1자 이상 (공백·한글 제외)</small>
+          <div id="authStrength" data-for="signup"></div>
         </label>
         <label class="field" data-for="signup">
           <span>비밀번호 확인</span>
           <input id="authPass2" type="password" autocomplete="new-password" maxlength="32" />
+          <small class="hint">위와 같은 비밀번호를 한 번 더 입력해 주세요</small>
         </label>
         <div id="authCaptcha" class="captcha" data-for="signup"></div>
+        <div id="loginGuard" class="login-guard" hidden>
+          <p id="loginWait" class="login-wait" role="status"></p>
+          <div id="loginCaptcha" class="captcha"></div>
+        </div>
         <p id="authError" class="form-error" role="alert"></p>
         <button id="authSubmit" class="btn btn-primary btn-block" type="submit">로그인</button>
       </form>
