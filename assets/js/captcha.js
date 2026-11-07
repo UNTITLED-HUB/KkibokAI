@@ -1,7 +1,7 @@
 // hCAPTCHA 위젯 (필요할 때만 스크립트를 불러온다)
-import { CONFIG } from './config.js';
-import { store } from './store.js';
-import { h } from './ui.js';
+import { CONFIG } from './config.js?v=1.5.0';
+import { store } from './store.js?v=1.5.0';
+import { h } from './ui.js?v=1.5.0';
 
 let loading = null;
 

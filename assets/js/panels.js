@@ -1,12 +1,12 @@
 // 사이드바 패널: 계정, 토큰 받기, 코드 교환, 설정, 저장공간
-import { api, session } from './api.js';
-import { mountCaptcha } from './captcha.js';
-import { chat } from './chat.js';
-import { sandbox } from './sandbox/index.js';
-import { local, store } from './store.js';
-import { $, confirmDialog, debounce, fmtBytes, fmtTime, fmtTokens, fmtWait, h, icon, promptDialog, toast } from './ui.js';
-import { bindField, checkPassword, checkUsername, PASSWORD_HINT, strengthMeter, USERNAME_HINT, validateAll } from './validate.js';
-import { tts } from './voice.js';
+import { api, session } from './api.js?v=1.5.0';
+import { mountCaptcha } from './captcha.js?v=1.5.0';
+import { chat } from './chat.js?v=1.5.0';
+import { sandbox } from './sandbox/index.js?v=1.5.0';
+import { local, store } from './store.js?v=1.5.0';
+import { $, confirmDialog, debounce, fmtBytes, fmtTime, fmtTokens, fmtWait, h, icon, promptDialog, toast } from './ui.js?v=1.5.0';
+import { bindField, checkPassword, checkUsername, PASSWORD_HINT, strengthMeter, USERNAME_HINT, validateAll } from './validate.js?v=1.5.0';
+import { tts } from './voice.js?v=1.5.0';
 
 const PURPOSE = {
   answer: '답변', plan: '계획', execute: '실행', review: '검토', verify: '검증', report: '결과 정리',
@@ -41,6 +41,14 @@ async function busyBtn(btn, fn) {
     btn.disabled = false;
     btn.textContent = label;
   }
+}
+
+/** 서버가 알려준 차감 기준을 짧은 문장으로 */
+function rateText(rt) {
+  if (!rt || typeof rt.gemini !== 'number') return 'AI 호출마다 사용량만큼 차감';
+  const nb = rt.nobrain ? `NO BRAIN 답변 ${rt.nobrain.min}~${rt.nobrain.max}` : '';
+  const wm = rt.work_min ? `WORK 최소 ${rt.work_min.fast}/${rt.work_min.think}/${rt.work_min.deep}/${rt.work_min.ultra}` : '';
+  return [`호출 1번당 최소 ${rt.call_min ?? 1}`, `Gemini 토큰 ÷ ${rt.gemini} · Groq 토큰 ÷ ${rt.groq}`, nb, wm].filter(Boolean).join(' · ');
 }
 
 export const panels = {
@@ -226,7 +234,7 @@ export const panels = {
         h('div', { class: 'meter', role: 'meter', 'aria-valuenow': Math.round(pct), 'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-label': '일일 토큰' }, h('i', { style: { width: `${pct}%` } })),
         h('span', { class: 'sub' }, `${hh}시간 ${mm}분 후 ${r.daily_amount}개로 초기화 · 보너스는 유지`)),
       group('광고 보상', h('button', { class: 'btn', disabled: true }, '준비 중')),
-      group('차감 기준', h('p', { class: 'desc' }, `Gemini 토큰 ÷ 2000 · Groq 토큰 ÷ 8000 · 최근 24시간 ${fmtTokens(r.used_24h)} 사용`)),
+      group('차감 기준', h('p', { class: 'desc' }, rateText(r.rates) + ` · 최근 24시간 ${fmtTokens(r.used_24h)} 사용`)),
     );
     const list = h('ul', { class: 'list' });
     if (!r.usage.length) list.append(h('li', {}, h('span', { class: 'sub' }, '기록 없음')));
@@ -417,18 +425,114 @@ export const panels = {
 
   // ---------------- 저장공간 ----------------
   async storage(body) {
-    const r = await api.get('/storage');
+    const [r, remote] = await Promise.all([api.get('/storage'), api.get('/files').catch(() => null)]);
     const st = r.stats || {};
-    const sbxSize = sandbox.vfs?.usedBytes() || 0;
-    const remote = await api.get('/files').catch(() => null);
-    body.append(group('서버', h('dl', { class: 'kv' },
-      h('dt', {}, '채팅'), h('dd', {}, `${st.chats ?? 0}개`),
-      h('dt', {}, '메시지'), h('dd', {}, `${st.messages ?? 0}개 (${fmtBytes(st.message_bytes)})`),
+    const d = r.detail;
+    const files = d?.files || [];
+    const chats = d?.chats || [];
+    const fileBytes = files.reduce((a, f) => a + Number(f.size || 0), 0);
+    const refresh = () => this.open('storage');
+    const btn = (label, ic, onclick, cls = 'btn-ghost') => h('button', { class: `btn btn-sm ${cls}`, html: (ic ? icon(ic) : '') + `<span>${label}</span>`, onclick });
+    const iconBtn = (label, ic, onclick) => h('button', { class: 'icon-btn', title: label, 'aria-label': label, html: icon(ic), onclick });
+    const more = (list, render, limit = 50) => {
+      const ul = h('ul', { class: 'list store-list' });
+      const draw = (n) => {
+        ul.replaceChildren(...list.slice(0, n).map(render));
+        if (list.length > n) ul.append(h('li', { class: 'more' }, btn(`${list.length - n}개 더 보기`, null, () => draw(n + limit))));
+        if (!list.length) ul.append(h('li', {}, h('span', { class: 'sub' }, '없음')));
+      };
+      draw(limit);
+      return ul;
+    };
+
+    // 요약
+    body.append(group('요약', h('dl', { class: 'kv' },
+      h('dt', {}, '채팅'), h('dd', {}, `${st.chats ?? 0}개 · 메시지 ${st.messages ?? 0}개 (${fmtBytes(st.message_bytes)})`),
+      h('dt', {}, '업로드·생성 파일'), h('dd', {}, d ? `${files.length}개 (${fmtBytes(fileBytes)})` : '-'),
       h('dt', {}, '메모리'), h('dd', {}, `${st.memories ?? 0}개`),
       h('dt', {}, '사용 기록'), h('dd', {}, `${st.usage_rows ?? 0}건`),
-      h('dt', {}, 'Sandbox 파일'), h('dd', {}, remote ? `${fmtBytes(remote.used)} / ${remote.limit / 1024 / 1024}MB` : '-'))));
-    body.append(group('이 브라우저', h('dl', { class: 'kv' },
-      h('dt', {}, 'Sandbox Linux'), h('dd', {}, `${fmtBytes(sbxSize)} / 100MB`))));
+      h('dt', {}, 'Sandbox 서버'), h('dd', {}, remote ? `${fmtBytes(remote.used)} / ${remote.limit / 1024 / 1024}MB` : '-'),
+      h('dt', {}, 'Sandbox 이 브라우저'), h('dd', {}, `${fmtBytes(sandbox.vfs?.usedBytes() || 0)} / 100MB`))));
+    if (!d) body.append(h('div', { class: 'notice' }, '자세한 목록을 보려면 채팅 보관 계정에서 6_chat_update_v1_5.sql 을 실행해 주세요.'));
+
+    // 채팅 관리
+    if (d) {
+      const picked = new Set();
+      const delSel = btn('선택 삭제', 'trash', async () => {
+        if (!picked.size) return toast('삭제할 채팅을 선택해 주세요.');
+        if (!(await confirmDialog({ title: `채팅 ${picked.size}개를 삭제할까요?`, message: '첨부 파일도 함께 지워져요.', confirmText: '삭제', danger: true }))) return;
+        await busyBtn(delSel, async () => {
+          for (const id of picked) {
+            await api.del(`/chats/${id}`).catch((e) => toast(e.message, 'error'));
+            store.chats = store.chats.filter((c) => c.id !== id);
+            if (store.chatId === id) chat.newChat();
+          }
+          store.emit('chats');
+          toast('삭제했어요');
+          refresh();
+        });
+      }, 'btn-danger');
+      const all = h('input', { type: 'checkbox', 'aria-label': '전체 선택' });
+      const boxes = [];
+      all.onchange = () => boxes.forEach((b) => {
+        b.checked = all.checked;
+        b.onchange();
+      });
+      const list = more(chats, (c) => {
+        const cb = h('input', { type: 'checkbox', 'aria-label': `${c.title} 선택` });
+        cb.onchange = () => (cb.checked ? picked.add(c.id) : picked.delete(c.id));
+        boxes.push(cb);
+        const open = h('button', { class: 'store-title', onclick: () => (this.close(), chat.open(c.id)) }, c.title || 'Unnamed Chat');
+        return h('li', { class: 'store-row' }, cb,
+          h('div', { class: 't' }, open, h('span', { class: 'sub' }, `메시지 ${c.messages} · 파일 ${c.files} · ${fmtBytes(c.bytes)} · ${fmtTime(c.updated_at)}`)),
+          iconBtn('삭제', 'trash', async () => {
+            if (!(await confirmDialog({ title: '채팅을 삭제할까요?', message: c.title, confirmText: '삭제', danger: true }))) return;
+            await api.del(`/chats/${c.id}`).catch((e) => toast(e.message, 'error'));
+            store.chats = store.chats.filter((x) => x.id !== c.id);
+            if (store.chatId === c.id) chat.newChat();
+            store.emit('chats');
+            refresh();
+          }));
+      });
+      body.append(group(`채팅 (${chats.length})`, h('div', { class: 'row store-bar' }, h('label', { class: 'row' }, all, h('span', {}, '전체')), delSel), list));
+
+      // 업로드·생성 파일
+      const fileList = more(files, (f) => h('li', { class: 'store-row' },
+        h('span', { class: 'ficon', html: icon(f.kind === 'image' ? 'image' : 'file') }),
+        h('div', { class: 't' }, h('b', {}, f.name), h('span', { class: 'sub' }, `${f.role === 'assistant' ? 'AI 생성' : '업로드'} · ${f.chat_title || ''} · ${f.size ? fmtBytes(f.size) + ' · ' : ''}${fmtTime(f.created_at)}`)),
+        iconBtn('열기', 'eye', async () => {
+          try {
+            const u = await api.get(`/attachments/url?message_id=${f.message_id}&index=${f.index}`);
+            if (u.url) window.open(u.url, '_blank', 'noopener');
+            else toast('열 수 없는 파일이에요.', 'error');
+          } catch (e) {
+            toast(e.message, 'error');
+          }
+        }),
+        iconBtn('삭제', 'trash', async () => {
+          if (!(await confirmDialog({ title: '파일을 삭제할까요?', message: f.name, confirmText: '삭제', danger: true }))) return;
+          try {
+            await api.del(`/attachments?message_id=${f.message_id}&index=${f.index}`);
+            refresh();
+          } catch (e) {
+            toast(e.message, 'error');
+          }
+        })));
+      body.append(group(`업로드·생성 파일 (${files.length})`, fileList));
+    }
+
+    // Sandbox 서버 파일
+    if (remote) {
+      const list = more(remote.files, (f) => h('li', { class: 'store-row' },
+        h('span', { class: 'ficon', html: icon('cloud') }),
+        h('div', { class: 't' }, h('b', {}, f.path.replace(/^\/user(?=\/|$)/, '~')), h('span', { class: 'sub' }, `${fmtBytes(f.size)} · ${fmtTime(f.updated_at)}`)),
+        iconBtn('서버에서 삭제', 'trash', async () => {
+          if (!(await confirmDialog({ title: '서버에서 삭제할까요?', message: f.path, confirmText: '삭제', danger: true }))) return;
+          await api.del(`/files?path=${encodeURIComponent(f.path)}`).catch((e) => toast(e.message, 'error'));
+          refresh();
+        })));
+      body.append(group(`Sandbox 서버 파일 (${remote.files.length})`, list));
+    }
 
     const act = (label, desc, confirmMsg, fn) => {
       const b = h('button', { class: 'btn btn-danger btn-sm' }, label);
@@ -438,7 +542,7 @@ export const panels = {
           try {
             await fn();
             toast(`${label} 완료`);
-            this.open('storage');
+            refresh();
           } catch (e) {
             toast(e.message, 'error');
           }
@@ -446,9 +550,9 @@ export const panels = {
       };
       return h('div', { class: 'setting' }, h('div', { class: 't' }, h('b', {}, label), desc ? h('small', {}, desc) : null), b);
     };
-    body.append(group('데이터 정리',
+    body.append(group('한꺼번에 정리',
       act('모든 채팅 삭제', '채팅과 첨부 파일', '되돌릴 수 없어요.', async () => {
-        if (store.busy) throw new Error('답변이 끝난 뒤 삭제할 수 있어요.');
+        chat.detach();
         await api.del('/chats');
         store.chats = [];
         chat.newChat();

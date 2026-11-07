@@ -1,12 +1,40 @@
 // 채팅: 메시지 렌더링, 스트리밍, WORK 도구 실행 왕복, 수정/다시 시도/읽기
-import { api, ApiError } from './api.js';
-import { renderMarkdown } from './markdown.js';
-import { sandbox } from './sandbox/index.js';
-import { store } from './store.js';
+import { api, ApiError } from './api.js?v=1.5.0';
+import { renderMarkdown } from './markdown.js?v=1.5.0';
+import { sandbox } from './sandbox/index.js?v=1.5.0';
+import { store } from './store.js?v=1.5.0';
 import {
-  $, copyText, fmtSeconds, fmtTokens, h, icon, MODE_VAR, modeKey, modeTag, setIcon, toast,
-} from './ui.js';
-import { tts } from './voice.js';
+  $, copyText, esc, fmtSeconds, fmtTokens, h, icon, MODE_VAR, modeKey, modeTag, setIcon, toast,
+} from './ui.js?v=1.5.0';
+import { tts } from './voice.js?v=1.5.0';
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const RUNNING = ['running', 'waiting_tools'];
+const isRunning = (m) => !!m.streaming || RUNNING.includes(m.meta?.status);
+
+// ---------- 작업 과정 문구 ----------
+function cut(s, n = 48) {
+  s = String(s || '').replace(/\s+/g, ' ').trim();
+  return s.length > n ? s.slice(0, n - 1) + '…' : s;
+}
+const code = (t, n) => `<code>${esc(cut(t, n))}</code>`;
+const base = (p) => String(p || '').split('/').filter(Boolean).pop() || p;
+function activityHtml(s, live) {
+  const t = s.target || '';
+  switch (s.kind) {
+    case 'exec': return `${code(t)} ${live ? '실행 중...' : '실행'}`;
+    case 'write': return `${code(base(t), 40)} ${live ? '파일 편집 중...' : '파일 편집'}`;
+    case 'read': return `${code(base(t), 40)} ${live ? '파일 읽는 중...' : '파일 읽음'}`;
+    case 'search': return `${live ? '웹 검색 중' : '웹 검색'}: ${esc(cut(t, 50))}`;
+    case 'image': return live ? '이미지 만드는 중...' : '이미지 생성';
+    case 'plan': return live ? '계획 세우는 중...' : '계획 세움';
+    case 'work': return live ? '작업하는 중...' : '작업';
+    case 'verify': return live ? '결과 검증하는 중...' : '결과 검증';
+    case 'report': return live ? '답변 정리하는 중...' : '답변 정리';
+    case 'answer': return live ? '첨부 파일 보는 중...' : '첨부 파일 확인';
+    default: return esc(s.label || '');
+  }
+}
 
 function thread() {
   return $('#thread');
@@ -59,10 +87,7 @@ export const chat = {
   },
 
   newChat() {
-    if (store.busy) {
-      toast('답변이 끝난 뒤에 할 수 있어요.');
-      return;
-    }
+    this.detach();
     tts.stop();
     store.chatId = null;
     this.messages = [];
@@ -73,10 +98,8 @@ export const chat = {
   },
 
   async open(id) {
-    if (store.busy) {
-      toast('답변이 끝난 뒤에 할 수 있어요.');
-      return;
-    }
+    if (this.stream && store.chatId === id) return;
+    this.detach();
     tts.stop();
     store.chatId = id;
     store.emit('chat-changed', id);
@@ -92,7 +115,7 @@ export const chat = {
       this.setTitle(r.chat?.title);
       this.render();
       scrollBottom(true);
-      if (r.active_run) this.showActiveRun(r.active_run);
+      if (r.active_run) this.resume(r.active_run);
     } catch (e) {
       if (store.chatId !== id) return;
       toast(e.message, 'error');
@@ -198,7 +221,7 @@ export const chat = {
     m._body = body;
     this.paintSteps(m);
     this.paintBody(m);
-    if (!m.streaming) {
+    if (!isRunning(m)) {
       el.append(this.actions([
         ['copy', '복사', (b) => this.copy(m.content, b)],
         ['refresh', '다시 시도', () => this.retry(m)],
@@ -210,11 +233,11 @@ export const chat = {
 
   paintBody(m) {
     if (!m._body) return;
-    if (m.streaming && !m.content) {
+    if (isRunning(m) && !m.content) {
       m._body.innerHTML = '<span class="typing" aria-label="생성 중"><i></i><i></i><i></i></span>';
       return;
     }
-    m._body.innerHTML = renderMarkdown(m.content, !!m.streaming);
+    m._body.innerHTML = renderMarkdown(m.content, isRunning(m));
   },
 
   paintSteps(m) {
@@ -225,23 +248,31 @@ export const chat = {
       box.innerHTML = '';
       return;
     }
-    const wasOpen = box.querySelector('details')?.open;
-    const last = steps[steps.length - 1];
+    const running = isRunning(m);
+    const item = (s, i) => {
+      const live = running && i === steps.length - 1;
+      const li = h('li', { class: `act ${live ? 'now' : 'done'}`, title: s.model || '' },
+        h('span', { class: 'dot', html: live ? '<i class="spin"></i>' : icon('check') }),
+        h('span', { class: 'txt', html: activityHtml(s, live) }));
+      if (s.detail) li.append(h('details', { class: 'act-detail' }, h('summary', {}, '자세히'), h('pre', {}, s.detail)));
+      return li;
+    };
+    if (running) {
+      const ol = h('ol', { class: 'activity' });
+      const from = Math.max(0, steps.length - 6);
+      if (from) ol.append(h('li', { class: 'act more' }, `이전 작업 ${from}개`));
+      steps.slice(from).forEach((s, j) => ol.append(item(s, from + j)));
+      box.replaceChildren(ol);
+      return;
+    }
+    const wasOpen = box.querySelector('details.steps')?.open;
     const det = h('details', { class: 'steps' });
-    det.open = m.streaming ? (wasOpen ?? true) : !!wasOpen;
-    det.append(h('summary', { html: icon('chevron', 'chev') }, m.streaming ? last.label : `작업 과정 ${steps.length}단계`));
-    const ol = h('ol');
-    steps.forEach((s, i) => {
-      const isLast = i === steps.length - 1;
-      const li = h('li', { class: `step ${s.phase === 'tool' ? 'tool' : ''} ${m.streaming && isLast ? 'live' : 'done-step'}` },
-        h('span', { class: 'label' }, s.label));
-      if (s.model) li.append(h('span', { class: 'model' }, s.model));
-      if (s.detail) li.append(h('span', { class: 'detail' }, s.detail));
-      ol.append(li);
-    });
+    det.open = !!wasOpen;
+    det.append(h('summary', { html: icon('chevron', 'chev') }, `작업 과정 ${steps.length}단계`));
+    const ol = h('ol', { class: 'activity' });
+    steps.forEach((s, i) => ol.append(item(s, i)));
     det.append(ol);
-    box.innerHTML = '';
-    box.append(det);
+    box.replaceChildren(det);
   },
 
   scheduleRender(m) {
@@ -325,6 +356,8 @@ export const chat = {
   },
 
   // ---------------- 전송 ----------------
+  // 서버가 답변을 끝까지 만들고 저장한다. 화면은 실시간으로 받거나(스트림),
+  // 연결이 끊기면 저장된 진행 상황을 주기적으로 확인한다(/runs/:id).
   async send({ content = '', attachments = [], editId = null, regenerateId = null, voice = false, hooks = {} } = {}) {
     if (store.busy) {
       toast('답변을 만드는 중이에요.');
@@ -359,7 +392,7 @@ export const chat = {
       };
       this.messages.push(userMsg);
     }
-    const ai = { id: `tmp-ai-${Date.now()}`, role: 'assistant', content: '', attachments: [], meta: { mode, submode: mode === 'work' ? submode : null, steps: [] }, streaming: true };
+    const ai = { id: `tmp-ai-${Date.now()}`, role: 'assistant', content: '', attachments: [], meta: { mode, submode: mode === 'work' ? submode : null, steps: [], status: 'running' }, streaming: true };
     this.messages.push(ai);
     this.render();
     scrollBottom(true);
@@ -378,16 +411,13 @@ export const chat = {
     if (editId) body.edit_message_id = editId;
     if (regenerateId) body.regenerate_message_id = regenerateId;
 
-    const s = { ctrl: new AbortController(), runId: null, ai, user: userMsg, hooks, mode, started: false, done: false, stopped: false };
-    this.stream = s;
-    this.setBusy(true);
+    const s = this.newStream({ ai, user: userMsg, hooks, mode, chatId: store.chatId });
     try {
-      await this._stream('/chat/send', body, s);
+      await this.drive(s, '/chat/send', body);
     } catch (e) {
-      if (s.stopped || e.code === 'ABORTED') {
-        /* stop() 가 처리 */
+      if (s.stopped || s.detached || e.code === 'ABORTED') {
+        /* stop()/detach() 가 처리 */
       } else if (!s.started) {
-        // 서버가 저장하기 전에 거절됨 → 화면 되돌리기
         this.messages = this.messages.filter((x) => x !== ai && !(isNew && x === userMsg));
         if (!isNew) await this.reloadAfter(0);
         if (isNew) store.emit('restore-input', { content, attachments });
@@ -395,17 +425,43 @@ export const chat = {
         if (e.code === 'NO_TOKENS') store.emit('open-panel', 'tokens');
       } else {
         ai.meta.error = true;
+        ai.meta.status = 'error';
         ai.content = (ai.content ? ai.content + '\n\n' : '') + `⚠️ ${e.message}`;
       }
     } finally {
-      ai.streaming = false;
-      this.stream = null;
-      this.setBusy(false);
-      if (!s.stopped) this.render();
-      if (s.started && !s.done && !s.stopped) this.reloadAfter(600);
+      this.endStream(s);
     }
     if (s.done && !voice && store.setting('auto_read', false) && !ai.meta.error) this.read(ai);
     return { text: ai.content, done: s.done };
+  },
+
+  newStream({ ai, user, hooks = {}, mode, runId = null, chatId }) {
+    const s = { ctrl: new AbortController(), runId, ai, user, hooks, mode, chatId, started: !!runId, done: false, stopped: false, detached: false };
+    this.stream = s;
+    this.setBusy(true);
+    return s;
+  },
+
+  endStream(s) {
+    s.ai.streaming = false;
+    if (this.stream === s) {
+      this.stream = null;
+      this.setBusy(false);
+    }
+    if (!s.detached && store.chatId === s.chatId) {
+      if (!s.stopped) this.render();
+      if (s.started && !s.done && !s.stopped) this.reloadAfter(600);
+    }
+  },
+
+  /** 다른 채팅으로 이동: 화면만 떠나고 서버 작업은 계속 */
+  detach() {
+    const s = this.stream;
+    if (!s) return;
+    s.detached = true;
+    s.ctrl.abort();
+    this.stream = null;
+    this.setBusy(false);
   },
 
   reloadAfter(ms) {
@@ -415,17 +471,112 @@ export const chat = {
     }, ms));
   },
 
+  /** 스트림 → (끊기면) 진행 상황 확인 → Sandbox 도구 실행 → 이어서 … 끝날 때까지 */
+  async drive(s, path, body) {
+    while (!s.done && !s.stopped && !s.detached) {
+      let pending = null;
+      if (path) {
+        try {
+          pending = await this._stream(path, body, s);
+        } catch (e) {
+          if (s.stopped || s.detached) return;
+          const transient = ['NETWORK', 'STREAM', 'RUN_BUSY'].includes(e.code) || e.status >= 500;
+          if (!s.runId || !transient) throw e;
+        }
+        path = null;
+      }
+      if (s.done || s.stopped || s.detached) return;
+      if (!pending) pending = await this.poll(s);
+      if (!pending || s.done || s.stopped || s.detached) return;
+      const results = [];
+      for (const c of pending.calls) {
+        if (s.stopped || s.detached) return;
+        this.markLive(s.ai, c);
+        const r = await sandbox.runTool(c);
+        results.push({ id: c.id, output: r.output, exit_code: r.exit_code });
+      }
+      if (s.stopped || s.detached) return;
+      path = '/chat/continue';
+      body = { run_id: s.runId, tool_results: results };
+    }
+  },
+
+  /** 지금 실행하는 Sandbox 작업을 진행 표시에 반영 */
+  markLive(ai, c) {
+    const steps = ai.meta.steps || (ai.meta.steps = []);
+    const target = c.name === 'sandbox_exec' ? c.args?.command : c.args?.path;
+    const kind = c.name === 'sandbox_exec' ? 'exec' : c.name === 'write_file' ? 'write' : 'read';
+    const i = steps.findIndex((x) => x.kind === kind && x.target === target);
+    if (i >= 0 && i !== steps.length - 1) steps.push(steps.splice(i, 1)[0]);
+    else if (i < 0) steps.push({ phase: 'tool', kind, target, label: '', t: Date.now() });
+    this.paintSteps(ai);
+  },
+
+  /** 서버에 저장된 진행 상황 확인 (연결이 끊겼거나 다른 기기에서 진행 중일 때) */
+  async poll(s) {
+    let delay = 700;
+    let fails = 0;
+    while (!s.stopped && !s.detached) {
+      await sleep(delay);
+      delay = Math.min(2000, delay + 150);
+      if (s.stopped || s.detached) return null;
+      let r;
+      try {
+        r = await api.get(`/runs/${s.runId}`);
+        fails = 0;
+      } catch (e) {
+        if (e.status === 404) {
+          s.done = true;
+          return null;
+        }
+        if (++fails > 20) throw e;
+        continue;
+      }
+      this.applyRun(s, r);
+      if (!RUNNING.includes(r.status)) {
+        s.done = true;
+        return null;
+      }
+      if (r.status === 'waiting_tools' && r.pending_calls?.length) return { run_id: s.runId, calls: r.pending_calls };
+    }
+    return null;
+  },
+
+  applyRun(s, r) {
+    const { ai, user } = s;
+    const am = r.assistant_message;
+    if (am) {
+      ai.id = am.id;
+      if (am.content !== ai.content) {
+        ai.content = am.content;
+        this.scheduleRender(ai);
+      }
+      ai.attachments = am.attachments || [];
+      const stepsChanged = (am.meta?.steps?.length || 0) !== (ai.meta?.steps?.length || 0);
+      ai.meta = { ...(am.meta || {}) };
+      if (stepsChanged) this.paintSteps(ai);
+      ai.created_at = am.created_at;
+    }
+    if (!RUNNING.includes(r.status)) {
+      if (r.user_meta) user.meta = { ...(user.meta || {}), ...r.user_meta };
+      if (r.balance) store.setBalance(r.balance);
+      ai.streaming = false;
+    }
+  },
+
   async _stream(path, body, s) {
     let pending = null;
-    let yielded = false;
     let error = null;
     const { ai, user } = s;
     await api.stream(path, body, (ev, d) => {
       switch (ev) {
         case 'meta':
           s.started = true;
+          s.runId = d.run_id || s.runId;
+          if (d.assistant_message) ai.id = d.assistant_message.id;
           if (d.chat_created || !store.chatId) {
             store.chatId = d.chat_id;
+            s.chatId = d.chat_id;
             if (!store.chats.find((c) => c.id === d.chat_id)) {
               store.chats.unshift({ id: d.chat_id, title: d.chat_title || 'Unnamed Chat', updated_at: new Date().toISOString() });
             }
@@ -442,11 +593,17 @@ export const chat = {
           break;
         case 'run':
           s.runId = d.run_id;
+          s.started = true;
           break;
         case 'step':
+          ai.meta.steps = ai.meta.steps || [];
           ai.meta.steps.push(d);
           this.paintSteps(ai);
           scrollBottom();
+          break;
+        case 'step_update':
+          if (ai.meta.steps?.[d.index]) ai.meta.steps[d.index] = d.step;
+          this.paintSteps(ai);
           break;
         case 'delta':
           ai.content += d.text;
@@ -474,17 +631,17 @@ export const chat = {
         case 'tool_calls':
           pending = d;
           break;
-        case 'yield':
-          yielded = true;
-          break;
         case 'done': {
           s.done = true;
           const am = d.assistant_message;
-          ai.id = am.id;
-          ai.content = am.content;
-          ai.attachments = am.attachments || [];
-          ai.meta = am.meta || ai.meta;
-          ai.created_at = am.created_at;
+          if (am) {
+            ai.id = am.id;
+            ai.content = am.content;
+            ai.attachments = am.attachments || [];
+            ai.meta = am.meta || ai.meta;
+            ai.created_at = am.created_at;
+          }
+          ai.streaming = false;
           user.meta = { ...(user.meta || {}), ...(d.user_meta || {}) };
           store.setBalance(d.balance);
           const c = store.chats.find((x) => x.id === d.chat_id);
@@ -500,20 +657,8 @@ export const chat = {
           break;
       }
     }, s.ctrl.signal);
-
-    if (s.done || s.stopped) return;
     if (error) throw new ApiError(500, error.code, error.message);
-    if (pending) {
-      const results = [];
-      for (const c of pending.calls) {
-        if (s.stopped) return;
-        const r = await sandbox.runTool(c);
-        results.push({ id: c.id, output: r.output, exit_code: r.exit_code });
-      }
-      if (s.stopped) return;
-      return this._stream('/chat/continue', { run_id: pending.run_id, tool_results: results }, s);
-    }
-    if (yielded && s.runId) return this._stream('/chat/continue', { run_id: s.runId }, s);
+    return pending;
   },
 
   async stop() {
@@ -521,68 +666,47 @@ export const chat = {
     if (!s || s.stopped) return;
     s.stopped = true;
     tts.stop();
-    if (s.mode === 'work' && s.runId) {
+    if (s.runId) {
       try {
         await api.post('/chat/cancel', { run_id: s.runId });
       } catch { /* ignore */ }
     }
     s.ctrl.abort();
     s.ai.streaming = false;
+    s.ai.meta.status = 'stopped';
     if (!s.ai.content) s.ai.content = '(중지됨)';
     this.render();
-    setTimeout(() => this.reload(), 1200);
+    setTimeout(() => this.reload(), 1800);
   },
 
-  // ---------------- 멈춰 있던 WORK 작업 ----------------
-  showActiveRun(run) {
-    const box = $('#messages');
-    const note = h('div', { class: 'notice', role: 'status' });
-    if (run.status === 'running') {
-      note.append(h('p', { style: { margin: '0 0 10px' } }, '다른 창에서 작업이 진행 중이에요.'),
-        h('button', { class: 'btn btn-sm', onclick: () => this.open(store.chatId) }, '새로고침'));
-      box.append(note);
-      return;
-    }
-    const resume = h('button', { class: 'btn btn-primary btn-sm' }, '이어서 진행');
-    const cancel = h('button', { class: 'btn btn-ghost btn-sm' }, '중지');
-    note.append(h('p', { style: { margin: '0 0 10px' } }, '멈춘 작업을 이어서 할까요?'), h('div', { class: 'row' }, resume, cancel));
-    box.append(note);
+  // ---------------- 나갔다 돌아왔을 때: 서버에서 진행 중인 작업 이어 보기 ----------------
+  async resume(run) {
+    if (this.stream) return;
+    const ai = this.messages.find((m) => m.id === run.assistant_id) || [...this.messages].reverse().find((m) => m.role === 'assistant');
+    if (!ai) return;
+    const user = [...this.messages].slice(0, this.messages.indexOf(ai)).reverse().find((m) => m.role === 'user') || { meta: {} };
+    ai.streaming = true;
+    ai.meta = { ...(ai.meta || {}), status: run.status };
+    this.render();
     scrollBottom(true);
-    cancel.onclick = async () => {
-      note.remove();
-      try {
-        await api.post('/chat/cancel', { run_id: run.id });
-      } catch (e) {
-        toast(e.message, 'error');
-      }
-      this.reload();
-    };
-    resume.onclick = async () => {
-      note.remove();
-      const user = [...this.messages].reverse().find((m) => m.role === 'user') || { meta: {} };
-      const ai = { id: `tmp-ai-${Date.now()}`, role: 'assistant', content: '', attachments: [], meta: { mode: 'work', submode: run.submode, steps: [...(run.steps || [])] }, streaming: true };
-      this.messages.push(ai);
-      this.render();
-      scrollBottom(true);
-      const s = { ctrl: new AbortController(), runId: run.id, ai, user, hooks: {}, mode: 'work', started: true, done: false, stopped: false };
-      this.stream = s;
-      this.setBusy(true);
-      try {
+    const s = this.newStream({ ai, user, mode: run.mode, runId: run.id, chatId: store.chatId });
+    try {
+      if (run.status === 'waiting_tools' && run.pending_calls?.length) {
         const results = [];
-        for (const c of run.pending_calls || []) {
+        for (const c of run.pending_calls) {
+          if (s.stopped || s.detached) return;
+          this.markLive(ai, c);
           const r = await sandbox.runTool(c);
           results.push({ id: c.id, output: r.output, exit_code: r.exit_code });
         }
-        await this._stream('/chat/continue', results.length ? { run_id: run.id, tool_results: results } : { run_id: run.id }, s);
-      } catch (e) {
-        if (!s.stopped) toast(e.message, 'error');
-      } finally {
-        ai.streaming = false;
-        this.stream = null;
-        this.setBusy(false);
-        this.render();
-        if (!s.done) this.reloadAfter(600);
+        await this.drive(s, '/chat/continue', { run_id: run.id, tool_results: results });
+      } else {
+        await this.drive(s, null, null);
       }
-    };
+    } catch (e) {
+      if (!s.stopped && !s.detached) toast(e.message, 'error');
+    } finally {
+      this.endStream(s);
+    }
   },
 };

@@ -1,8 +1,8 @@
 // 질문 입력창: 실행 모드 선택, 첨부, 음성 전송, 보내기/중지
-import { chat } from './chat.js';
-import { store } from './store.js';
-import { $, $$, esc, fmtBytes, h, icon, modeKey, setIcon, toast } from './ui.js';
-import { recorderSupported, startRecording, transcribe } from './voice.js';
+import { chat } from './chat.js?v=1.5.0';
+import { store } from './store.js?v=1.5.0';
+import { $, $$, esc, fmtBytes, h, icon, modeKey, setIcon, toast } from './ui.js?v=1.5.0';
+import { recorderSupported, startRecording, transcribe } from './voice.js?v=1.5.0';
 
 const MAX_FILES = 4;
 const MAX_BYTES = 5 * 1024 * 1024;
