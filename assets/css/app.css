@@ -603,3 +603,23 @@ input[type='range'] { accent-color: var(--live); width: 100%; }
 .store-row .ficon { color: var(--muted); display: grid; }
 .store-row .ficon .ic { width: 16px; height: 16px; }
 .store-list li.more { justify-content: center; }
+/* 채팅 안 작업 과정과 파일 카드 */
+.steps.timeline { border: 0; padding: 0; margin: 8px 0 14px; }
+.timeline > summary { margin: 0; gap: 10px; min-height: 30px; }
+.timeline-label { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.timeline .activity { border-left: 1px solid var(--line); margin: 10px 0 0 9px; padding: 0 0 0 18px; gap: 16px; }
+.timeline .act { position: relative; grid-template-columns: 1fr; }
+.timeline .act .dot { position: absolute; left: -28px; top: 1px; background: var(--bg-2); border-radius: 50%; }
+.file-cards { max-width: 100%; justify-content: flex-start; margin: 10px 0; }
+.file-card { width: min(100%, 340px); border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: var(--surface); }
+.file-card-title { display: flex; align-items: center; gap: 10px; overflow-wrap: anywhere; }
+.file-card-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.file-action { color: var(--text); background: var(--bg-2); border: 1px solid var(--line); border-radius: 7px; padding: 6px 9px; cursor: pointer; }
+.file-preview-overlay { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: #000b; padding: 16px; }
+.file-preview-panel { width: min(800px, 100%); height: min(80vh, 800px); background: var(--bg-2); border: 1px solid var(--line); border-radius: 14px; display: flex; flex-direction: column; overflow: hidden; }
+.file-preview-panel header { padding: 12px; display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line); }
+.file-preview-body { flex: 1; overflow: auto; padding: 12px; }
+.file-preview-body pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.file-preview-body img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.file-preview-body iframe { width: 100%; height: 100%; border: 0; }
+.remote-editor { width: 100%; min-height: 45vh; resize: vertical; font: 14px/1.5 monospace; color: var(--text); background: var(--bg); border: 1px solid var(--line); padding: 12px; }
