@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="ko" data-font="md">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#131926" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="description" content="KkibokAI 사용법 안내: 채팅, 모드, 토큰, Sandbox Linux, 안드로이드 앱, 승인과 안전 규칙" />
+  <title>도움말 · KkibokAI</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="assets/css/app.css?v=1.17.0" />
+  <link rel="stylesheet" href="assets/css/responsive.css?v=1.17.0" />
+  <link rel="stylesheet" href="assets/css/docs.css?v=1.17.0" />
+</head>
+<body class="page docs-page">
+  <header class="page-top">
+    <a class="brand" href="./"><svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 22 12 12 22 2 12Z" /></svg><span>KkibokAI</span><span class="docs-badge">도움말</span></a>
+    <div class="docs-top-actions">
+      <button id="docsTocToggle" class="btn btn-ghost btn-sm docs-toc-toggle" type="button" aria-expanded="false" aria-controls="docsToc">목차</button>
+      <a class="btn btn-ghost btn-sm" href="./">앱으로 돌아가기</a>
+    </div>
+  </header>
+
+  <div class="docs-layout">
+    <aside id="docsToc" class="docs-toc" aria-label="목차">
+      <label class="docs-search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="docsSearch" type="search" placeholder="도움말 검색" aria-label="도움말 검색" autocomplete="off" />
+      </label>
+      <nav>
+        <a href="#start">시작하기</a>
+        <a href="#chat">채팅과 모드</a>
+        <a href="#menu">사이드바 메뉴</a>
+        <a href="#tokens">토큰과 코드 교환</a>
+        <a href="#sandbox">Sandbox Linux</a>
+        <a href="#files">파일 탐색·휴지통</a>
+        <a href="#approval">승인과 안전 규칙</a>
+        <a href="#connectors">도구 연결</a>
+        <a href="#android">안드로이드 앱</a>
+        <a href="#local">로컬 터미널·로컬 파일</a>
+        <a href="#support">문의·계정 찾기</a>
+        <a href="#notify">계정 알림</a>
+        <a href="#limits">저장공간과 한도</a>
+        <a href="#faq">자주 묻는 질문</a>
+      </nav>
+    </aside>
+
+    <main class="doc docs-main">
+      <section class="docs-hero">
+        <h1>KkibokAI 사용법</h1>
+        <p>질문하고, 파일을 만들고, 터미널에서 직접 실행해 보는 AI 작업 공간입니다. 처음 쓰시면 <a href="#start">시작하기</a>부터, 궁금한 것이 있으면 위 검색창을 이용하세요.</p>
+        <div class="docs-cards">
+          <a class="docs-card" href="#chat"><b>채팅</b><span>NO BRAIN·WORK 모드, 첨부, 음성</span></a>
+          <a class="docs-card" href="#sandbox"><b>Sandbox Linux</b><span>브라우저 안의 파일·명령 환경</span></a>
+          <a class="docs-card" href="#android"><b>안드로이드 앱</b><span>실제 Linux 터미널과 로컬 파일</span></a>
+          <a class="docs-card" href="#approval"><b>승인과 안전</b><span>AI가 무엇을 묻고 무엇을 못 하는지</span></a>
+        </div>
+        <p id="docsNoResult" class="docs-empty" hidden>검색 결과가 없어요. 다른 단어로 찾아보세요.</p>
+      </section>
+
+      <section class="docs-sec" id="start">
+        <h2>1. 시작하기</h2>
+        <h3>가입과 로그인</h3>
+        <ol>
+          <li>사이트(또는 앱)를 열고 <b>회원가입</b>을 누릅니다.</li>
+          <li>사용자 이름은 영문·숫자 8~24자(밑줄 <code>_</code>은 한 번만), 비밀번호는 영문과 숫자를 섞어 8~32자로 정합니다.</li>
+          <li>hCAPTCHA 인증과 개인정보 처리방침 동의 후 가입하면 바로 로그인됩니다.</li>
+        </ol>
+        <p>이메일·전화번호는 받지 않습니다. 비밀번호를 잊으면 되찾을 방법이 제한되니 안전한 곳에 보관하세요. 로그인에 여러 번 실패하면 잠시 기다린 뒤 다시 시도해야 합니다.</p>
+        <h3>화면 구성</h3>
+        <div class="doc-table"><table>
+          <thead><tr><th>위치</th><th>내용</th></tr></thead>
+          <tbody>
+            <tr><td>왼쪽 사이드바</td><td>새 채팅, 최근 채팅 목록, 계정·사용량·설정·저장공간·작업공간·도움말 (모바일은 왼쪽 위 메뉴 버튼)</td></tr>
+            <tr><td>상단 바</td><td>채팅 제목, 남은 토큰, 공유 링크, Sandbox Linux(앱에서는 로컬 터미널) 버튼</td></tr>
+            <tr><td>입력창 위</td><td>실행 모드(NO BRAIN/WORK). 안드로이드 앱에서는 작업 공간(Sandbox/Local)과 승인 강도도 표시</td></tr>
+            <tr><td>입력창</td><td>파일 첨부, 음성 전송, LIVE 음성 대화, 보내기(답변 중에는 중지)</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section class="docs-sec" id="chat">
+        <h2>2. 채팅과 모드</h2>
+        <h3>실행 모드</h3>
+        <div class="doc-table"><table>
+          <thead><tr><th>모드</th><th>언제 쓰나요</th></tr></thead>
+          <tbody>
+            <tr><td><span class="docs-tag nb">NO BRAIN</span></td><td>가벼운 대화와 질문. 가장 빠르고 토큰이 적게 듭니다.</td></tr>
+            <tr><td><span class="docs-tag w1">WORK · FAST</span></td><td>파일 만들기, 명령 실행 등 도구를 쓰는 작업을 빠르게.</td></tr>
+            <tr><td><span class="docs-tag w2">WORK · THINK</span></td><td>계획을 세운 뒤 실행하는 중간 난이도 작업.</td></tr>
+            <tr><td><span class="docs-tag w3">WORK · DEEP</span></td><td>여러 단계와 검토가 필요한 큰 작업.</td></tr>
+            <tr><td><span class="docs-tag w4">WORK · ULTRA</span></td><td>가장 꼼꼼한 계획·실행·검증. 시간과 토큰이 가장 많이 듭니다.</td></tr>
+          </tbody>
+        </table></div>
+        <p>설정 → AI 탭에서 처음 켰을 때의 기본 모드를 고를 수 있습니다. 답변 중에는 모드·작업 공간·승인 강도를 바꿀 수 없습니다.</p>
+        <h3>보내기와 줄바꿈</h3>
+        <ul>
+          <li><b>컴퓨터</b>: <kbd>Enter</kbd> 보내기, <kbd>Shift</kbd>+<kbd>Enter</kbd> 줄바꿈. 설정 → 기타 설정의 <b>Enter로 보내기</b>를 끄면 Enter가 줄바꿈이 됩니다.</li>
+          <li><b>휴대폰·태블릿</b>: 키보드의 줄바꿈(↵) 키는 항상 줄을 바꾸고, 보내기는 입력창 오른쪽 보내기 버튼으로만 합니다.</li>
+          <li>답변 중에는 보내기 버튼이 <b>중지</b> 버튼으로 바뀝니다.</li>
+        </ul>
+        <h3>첨부와 음성</h3>
+        <ul>
+          <li>클립 버튼, 붙여넣기 또는 끌어다 놓기로 파일·이미지를 첨부합니다. 첨부한 파일은 채팅 프로젝트의 <code>upload/</code> 폴더에도 들어갑니다.</li>
+          <li>마이크 버튼은 말한 내용을 글로 바꿔 보내고, <b>LIVE</b>는 음성으로 계속 대화합니다. 인식 언어·읽기 목소리·자동 읽기는 설정 → 기타 설정에서 바꿉니다.</li>
+        </ul>
+        <h3>답변 다루기</h3>
+        <ul>
+          <li>코드 블록 오른쪽 위 복사 버튼으로 코드를 복사합니다. 긴 줄은 블록 안에서 좌우로 밀어 봅니다.</li>
+          <li>AI가 만든 파일 카드에서 미리보기·원문·편집·다운로드를 할 수 있습니다. HTML은 분리된 미리보기 창에서 안전하게 실행됩니다.</li>
+          <li>상단 공유 버튼으로 읽기 전용 공유 링크를 만들고, 새 링크로 바꾸거나 공유를 중지할 수 있습니다.</li>
+          <li>메모리를 켜 두면 AI가 대화에서 기억할 만한 내용을 저장합니다. 설정 → AI → 메모리 관리에서 보고 고치거나 지울 수 있습니다.</li>
+        </ul>
+        <h3>단축키 (컴퓨터)</h3>
+        <div class="doc-table"><table>
+          <thead><tr><th>키</th><th>동작</th></tr></thead>
+          <tbody>
+            <tr><td><kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>O</kbd></td><td>새 채팅</td></tr>
+            <tr><td><kbd>/</kbd></td><td>입력창으로 이동</td></tr>
+            <tr><td><kbd>Esc</kbd></td><td>답변 중지 / 열린 창 닫기</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section class="docs-sec" id="menu">
+        <h2>3. 사이드바 메뉴</h2>
+        <div class="doc-table"><table>
+          <thead><tr><th>메뉴</th><th>할 수 있는 것</th></tr></thead>
+          <tbody>
+            <tr><td>계정</td><td>사용자 이름·고유 ID 확인(복사), 사용자 이름·비밀번호 변경, 로그아웃(모든 기기), 계정 삭제</td></tr>
+            <tr><td>사용량</td><td>[토큰] 남은 토큰과 차감 기준 · [코드 교환] 교환 코드 입력</td></tr>
+            <tr><td>설정</td><td>[AI] 메모리·AI 샌드박스·기본 모드·도구 연결 · [디스플레이] 글자 크기, 메시지 정보 · [기타 설정] 음성, Enter로 보내기</td></tr>
+            <tr><td>저장공간</td><td>서버 사용량, 서버 파일 관리, 채팅·메모리 일괄 삭제, 샌드박스 초기화</td></tr>
+            <tr><td>작업공간 (앱 전용)</td><td>Sandbox/Local 선택, Sandbox 터미널, 서버 파일, 로컬 터미널·로컬 파일·권한·승인 강도</td></tr>
+            <tr><td>도움말·문의</td><td>사용법 문서(이 페이지), 문의하기·빠른 문의, 내 문의</td></tr>
+          </tbody>
+        </table></div>
+        <p><b>고유 ID</b>는 사용자 이름을 바꿔도 변하지 않는 계정 번호입니다. 문의할 때 알려 주시면 계정을 정확히 찾을 수 있습니다.</p>
+      </section>
+
+      <section class="docs-sec" id="tokens">
+        <h2>4. 토큰과 코드 교환</h2>
+        <ul>
+          <li>AI를 부를 때마다 사용한 양만큼 토큰이 차감됩니다. 남은 토큰은 상단과 사이드바 아래에 표시됩니다.</li>
+          <li><b>일일 토큰</b>은 매일 00:00(한국 시간)에 기본값으로 다시 채워집니다. 쓰고 남은 양은 이월되지 않습니다.</li>
+          <li><b>보너스 토큰</b>은 코드 교환·이벤트로 받은 토큰으로, 날짜가 바뀌어도 남습니다. 일일 토큰을 먼저 쓰고 부족하면 보너스에서 차감됩니다.</li>
+          <li>사용량 → <b>코드 교환</b>에 받은 코드를 입력하세요. 틀린 코드를 연속으로 입력하면 잠시 기다려야 합니다.</li>
+        </ul>
+        <p class="docs-note">토큰이 부족하면 답변이 시작되지 않습니다. WORK의 높은 단계(DEEP·ULTRA)는 최소 차감량이 더 큽니다. 정확한 기준은 사용량 → 토큰의 <b>차감 기준</b>에 나옵니다.</p>
+      </section>
+
+      <section class="docs-sec" id="sandbox">
+        <h2>5. Sandbox Linux</h2>
+        <p>브라우저 안에서 동작하는 리눅스 비슷한 파일·명령 환경입니다. 상단 터미널 버튼이나 작업공간 → <b>터미널 열기</b>로 엽니다. 파일은 이 브라우저(기기)에 저장되고, 서버 파일은 필요할 때만 불러옵니다. 실제 Linux 프로그램(python, npm, git 등)은 실행되지 않습니다 — 이런 작업은 <a href="#android">안드로이드 앱의 Local</a>에서 하세요.</p>
+        <h3>채팅마다 프로젝트 폴더</h3>
+        <pre class="docs-pre">/user/projects/&lt;채팅 이름-식별자&gt;/
+  upload/    ← 첨부한 파일
+  outputs/   ← AI가 만든 결과물</pre>
+        <p>채팅을 열면 해당 프로젝트 폴더가 현재 위치가 됩니다. AI 도구가 <code>/user/upload</code>, <code>/user/download</code>를 쓰면 각각 현재 프로젝트의 <code>upload/</code>, <code>outputs/</code>로 연결됩니다.</p>
+        <h3>주요 명령</h3>
+        <div class="doc-table"><table>
+          <thead><tr><th>명령</th><th>설명</th></tr></thead>
+          <tbody>
+            <tr><td><code>ls [-la]</code>, <code>cd</code>, <code>pwd</code>, <code>tree</code></td><td>목록, 이동, 현재 위치, 폴더 구조</td></tr>
+            <tr><td><code>cat</code>, <code>head</code>, <code>tail</code>, <code>wc</code></td><td>파일 내용 보기와 세기</td></tr>
+            <tr><td><code>mkdir -p</code>, <code>touch</code>, <code>cp -r</code>, <code>mv</code></td><td>만들기, 복사, 이동·이름 변경</td></tr>
+            <tr><td><code>rm [-rf]</code>, <code>rmdir</code></td><td>삭제(휴지통으로 이동), 빈 폴더 삭제</td></tr>
+            <tr><td><code>find</code>, <code>grep [-inrvc]</code>, <code>sed s/a/b/g</code></td><td>파일 찾기, 내용 검색, 바꾸기</td></tr>
+            <tr><td><code>sort</code>, <code>uniq</code>, <code>cut</code>, <code>tr</code>, <code>base64</code></td><td>텍스트 가공 (파이프 <code>|</code>와 <code>&gt;</code> 저장 지원)</td></tr>
+            <tr><td><code>js -e CODE</code>, <code>js file.js</code></td><td>JavaScript 실행</td></tr>
+            <tr><td><code>open FILE</code>, <code>download FILE</code></td><td>미리보기, 기기로 다운로드</td></tr>
+            <tr><td><code>du -sh</code>, <code>df</code>, <code>help</code>, <code>clear</code></td><td>용량, 도움말, 화면 지우기</td></tr>
+          </tbody>
+        </table></div>
+        <p>휴대폰에서는 터미널 아래 보조 키 줄(Tab, ↑, ↓, Ctrl+C, <code>/</code>, <code>|</code> 등)을 쓸 수 있습니다. <kbd>Tab</kbd>은 명령·경로 자동 완성입니다.</p>
+        <p>상단 <b>복사</b> 버튼은 선택한 부분을, 선택이 없으면 터미널 로그 전체를 복사합니다. 오류를 문의할 때 그대로 붙여 넣으면 됩니다. 채팅의 <b>도구 출력</b>에도 복사 버튼이 있습니다.</p>
+      </section>
+
+      <section class="docs-sec" id="files">
+        <h2>6. 파일 탐색 · 휴지통 · 백업</h2>
+        <p>Sandbox 상단의 <b>파일</b> 버튼으로 파일 트리를 엽니다. 파일이 하나도 없는 폴더는 접힌 상태로 열려, 파일이 있는 곳만 바로 보입니다. 폴더를 누르면 펼치고, 한 번 더 누르면 접습니다.</p>
+        <ul>
+          <li>파일·폴더의 <b>⋯</b> 메뉴(또는 길게 누르기/오른쪽 클릭): 열기, 원문 보기, 이름 변경, 잠금, 백업, 다운로드, 서버로 전송, 삭제</li>
+          <li><b>잠금</b>한 항목은 AI가 바꾸거나 지울 때 확인을 받습니다.</li>
+          <li><b>백업</b>은 AI가 접근할 수 없는 별도 사본입니다. ⋯ → 백업 목록에서 복원합니다.</li>
+          <li>업로드 버튼으로 파일이나 폴더를 통째로 올릴 수 있고, ZIP·TAR 압축은 풀어서 넣을 수 있습니다.</li>
+        </ul>
+        <h3>휴지통</h3>
+        <ul>
+          <li>지운 파일·폴더는 바로 사라지지 않고 <b>휴지통</b>으로 가서 <b>7일</b> 동안 보관된 뒤 자동 삭제됩니다.</li>
+          <li><b>채팅을 삭제하면</b> 그 채팅의 프로젝트 폴더(첨부·결과물 포함)도 휴지통으로 옮겨집니다. 서버에만 있던 파일은 삭제 직전에 기기로 받아 함께 보관합니다.</li>
+          <li>파일 트리의 ⋯ → 휴지통에서 항목별 복원·영구 삭제, 또는 전체 비우기를 할 수 있습니다. 복원하면 원래 경로로 돌아갑니다(같은 이름이 있으면 "(2)"가 붙습니다).</li>
+          <li>휴지통도 Sandbox 저장공간(100MB)에 포함됩니다. 공간이 모자라면 휴지통을 비워 주세요.</li>
+        </ul>
+        <h3>서버 파일</h3>
+        <p>작업공간 → <b>서버 파일 관리</b>(또는 파일 트리의 구름 버튼)에서 서버에 저장된 파일을 검색하고, 여러 개를 골라 가져오기·ZIP 다운로드·삭제할 수 있습니다. 서버 삭제는 되돌릴 수 없습니다.</p>
+      </section>
+
+      <section class="docs-sec" id="approval">
+        <h2>7. 승인과 안전 규칙</h2>
+        <p>AI가 파일을 바꾸거나 명령을 실행하기 전에, 대화 맨 아래에 작은 <b>승인 카드</b>가 나타납니다. 허용 또는 거부를 누르면 되고, 중지 버튼을 누르면 자동으로 거부됩니다.</p>
+        <div class="doc-table"><table>
+          <thead><tr><th>승인 강도</th><th>동작</th></tr></thead>
+          <tbody>
+            <tr><td>수동</td><td>읽기·목록·검색·간단한 <code>ls</code>/<code>cd</code>만 자동. 편집·명령 실행은 매번 확인</td></tr>
+            <tr><td>자동</td><td>파일 편집 등은 자동. 다운로드·삭제·알 수 없는 명령·코드 실행은 확인</td></tr>
+            <tr><td>전체</td><td>일반 작업은 추가 확인 없이 실행 (아래 규칙은 그대로 적용)</td></tr>
+          </tbody>
+        </table></div>
+        <p>웹사이트에서는 승인 강도가 <b>수동</b>으로 고정되고 선택 막대가 보이지 않습니다. 승인 강도를 바꾸는 기능은 안드로이드 앱에만 있어요. 앱에서 <b>전체</b>로 바꿀 때와 화면 조작을 켠 작업을 시작할 때는 웹 화면이 대신 누를 수 없는 시스템 확인 창이 뜹니다. 전체 승인이어도 화면 조작은 앱마다 한 번 확인하고, KkibokAI 자신·설정 앱·시스템 화면은 AI가 조작하지 않습니다.</p>
+        <h3>명령 시간 제한</h3>
+        <p>AI는 명령마다 시간 제한을 정합니다. 기본은 Sandbox 60초, 앱의 Local 300초이고, 설치·빌드처럼 오래 걸리는 명령은 AI가 늘립니다(최대 Sandbox 10분, Local 1시간). 시간이 지나면 명령을 멈추고 그때까지의 출력과 종료 코드 <code>124</code>를 AI에게 돌려줍니다. 서버처럼 끝나지 않는 명령은 백그라운드로 실행하도록 안내되어 있습니다.</p>
+        <h3>승인 강도와 상관없이 적용되는 규칙</h3>
+        <ul>
+          <li><span class="docs-tag danger">차단</span> 비밀번호·토큰·시크릿 설정, 인증 정보 파일(<code>~/.ssh</code>, <code>.netrc</code> 등) 읽기·쓰기는 AI가 절대 하지 않습니다. 필요하면 직접 설정하세요. 파일 검색 결과에도 이런 파일과 <code>.env</code>는 나오지 않습니다.</li>
+          <li><span class="docs-tag warn">직접 동의</span> <code>.env</code> 같은 비밀 값 파일 읽기, 셸 시작 파일(<code>.profile</code>, <code>.bashrc</code>)·git hooks·git 설정 변경, 명령 결과를 외부로 보내는 명령, 동적 SQL·함수 생성도 매번 묻습니다.</li>
+          <li><span class="docs-tag warn">직접 동의</span> Supabase 함수 배포·삭제, 저장소 삭제, 강제 푸시, 넓은 범위 삭제(<code>rm -rf</code>), 프로덕션 배포 같은 중요 작업은 <b>전체 승인이어도</b> 붉은 카드로 다시 묻습니다. 앱에서는 웹이 대신 누를 수 없는 시스템 확인 창으로 묻습니다.</li>
+          <li>로컬(기기) 파일을 서버로 올리는 작업은 매번 동의를 받습니다. 거부하면 파일은 기기에만 남습니다.</li>
+        </ul>
+      </section>
+
+      <section class="docs-sec" id="connectors">
+        <h2>8. 도구 연결</h2>
+        <p>설정 → AI → <b>도구 연결</b>에서 GitHub, Supabase, Vercel, Netlify 토큰을 등록하면 AI가 해당 서비스에서 작업할 수 있습니다. 토큰은 서버에 암호화되어 저장되며, 연결을 해제하면 바로 지워집니다. 변경 작업은 항상 승인 카드를 거칩니다. 최소 권한 토큰을 쓰는 것을 권장합니다.</p>
+      </section>
+
+      <section class="docs-sec" id="android">
+        <h2>9. 안드로이드 앱</h2>
+        <h3>설치</h3>
+        <ol>
+          <li><a href="https://github.com/UNTITLED-HUB/KkibokAI/releases/latest/download/KkibokAI.apk">최신 APK 다운로드</a> 후 설치합니다(출처를 알 수 없는 앱 설치 허용 필요).</li>
+          <li>앱은 이 사이트 화면을 그대로 불러오므로, 사이트가 업데이트되면 앱도 바로 바뀝니다. 인터넷이 없으면 앱에 들어 있는 화면으로 엽니다.</li>
+          <li>앱 0.7.0부터는 <b>자동 업데이트</b>됩니다. 앱을 열 때 새 버전이 있으면 자동으로 받아 설치 확인 창을 띄우고, "업데이트"만 누르면 됩니다(처음 한 번은 'KkibokAI의 앱 설치 허용'을 켜야 해요). 설정 → 기타 설정 → 앱 업데이트에서 직접 확인할 수도 있어요.</li>
+          <li>0.6.0 이하를 쓰고 있다면 최신 APK를 한 번만 직접 설치해 주세요.</li>
+        </ol>
+        <h3>Sandbox와 Local</h3>
+        <div class="doc-table"><table>
+          <thead><tr><th></th><th>Sandbox</th><th>Local (앱 전용)</th></tr></thead>
+          <tbody>
+            <tr><td>실행 위치</td><td>브라우저 안 가상 환경</td><td>앱 내부 Alpine Linux (PRoot)</td></tr>
+            <tr><td>실제 프로그램</td><td>불가 (JS만)</td><td>python, node, git, curl 등 설치·실행</td></tr>
+            <tr><td>작업 폴더</td><td><code>/user/projects/…</code></td><td><code>/user</code> (앱 전용 저장소)</td></tr>
+            <tr><td>파일 보관</td><td>브라우저 저장소 + 필요 시 서버</td><td>기기에만 (요청할 때만 서버로)</td></tr>
+          </tbody>
+        </table></div>
+        <p>입력창 위의 Sandbox/Local 버튼이나 작업공간 메뉴에서 바꿉니다. 답변 중에는 바꿀 수 없습니다.</p>
+        <h3>권한</h3>
+        <p>작업공간 → <b>권한 및 작업 설정</b>에서 필요한 것만 켭니다: 알림(답변 완료), 마이크(음성), 다른 앱 위에 표시·접근성(화면 조작). 화면 조작을 켜면 현재 화면의 스크린샷과 텍스트가 서버와 AI 제공자에게 전달됩니다.</p>
+      </section>
+
+      <section class="docs-sec" id="local">
+        <h2>10. 로컬 터미널 · 로컬 파일</h2>
+        <p>로그인한 상태에서 상단 <b>터미널</b> 버튼(또는 작업공간 → 로컬 터미널)을 누릅니다. 처음 한 번은 Linux를 설치하느라 시간이 걸립니다.</p>
+        <ul>
+          <li><b>+</b> 버튼으로 세션을 추가합니다(동시에 최대 12개). 위쪽 탭으로 세션을 오갑니다.</li>
+          <li>화면을 닫아도 세션은 백그라운드에서 계속 실행됩니다. 끝내려면 <b>세션 종료</b>, 전부 끝내려면 알림의 <b>모두 종료</b>를 누르세요.</li>
+          <li>세션 추가가 실패하면 터미널 위쪽 상태 문구와 화면에 실패 이유가 나옵니다. 다시 + 를 눌러 재시도할 수 있습니다.</li>
+          <li><b>복사</b> 버튼: 선택한 부분 또는 현재 세션의 로그 전체를 복사합니다.</li>
+          <li>터미널에 입력할 때는 키보드 단어 추천·자동 수정이 꺼지고, 누르는 글자가 바로 입력됩니다. 이 때문에 키보드에 따라 터미널 입력 중에는 영문만 입력될 수 있어요(한글은 복사해 붙여 넣기).</li>
+        </ul>
+        <pre class="docs-pre">pkg update
+pkg install python nodejs git curl
+python -c "print('Python works')"
+mkdir -p /user/my-app &amp;&amp; cd /user/my-app
+python -m http.server 8080      # 다른 세션에서 curl http://127.0.0.1:8080</pre>
+        <h3>로컬 파일 (작업 폴더)</h3>
+        <p>작업공간 → <b>로컬 파일</b>에서 앱 작업 폴더(<code>/user</code>)를 터미널 없이 둘러볼 수 있습니다.</p>
+        <ul>
+          <li>폴더 이동, 새 폴더·새 파일 만들기, 텍스트 파일 열기·편집·저장</li>
+          <li>휴대폰의 파일을 작업 폴더로 <b>가져오기</b>, 작업 폴더의 파일을 휴대폰에 <b>내보내기</b>(저장 위치 선택)</li>
+          <li>이름 변경과 삭제(확인 후 영구 삭제)</li>
+        </ul>
+        <p>로컬 파일은 기기에만 저장되며, 앱을 삭제하면 함께 지워집니다. 중요한 파일은 내보내기로 따로 보관하세요.</p>
+      </section>
+
+      <section class="docs-sec" id="support">
+        <h2>11. 문의 · 계정 찾기</h2>
+        <h3>문의하기</h3>
+        <p>사이드바의 <b>도움말·문의</b>, 또는 로그인 화면 아래 <b>문의하기</b>에서 보냅니다. 로그인하지 않아도 보낼 수 있어요.</p>
+        <ol>
+          <li><b>빠른 문의</b>(비밀번호를 잊었어요, 오류가 생겼어요 등)를 누르면 분류와 내용 서식이 자동으로 채워집니다.</li>
+          <li>또는 <b>메인 분류</b>(계정·신고·질문·기타)와 <b>세부 분류</b>를 고르고 내용을 적습니다.</li>
+          <li>hCAPTCHA 인증 후 <b>문의 보내기</b>. 비밀번호는 절대 적지 마세요.</li>
+        </ol>
+        <ul>
+          <li>로그인한 상태라면 답변을 <b>문의 → 내 문의</b>에서 보고, 앱에서는 알림으로도 받습니다.</li>
+          <li>로그인하지 않았다면 <b>문의 번호</b>와 <b>확인 코드</b>가 나옵니다. <b>문의 확인</b>에서 이 두 가지로 답변을 보고 추가 메시지를 남길 수 있어요. 같은 기기에서는 자동으로 기억하지만 꼭 따로 적어 두세요.</li>
+          <li>도배를 막기 위해 1시간에 5건까지 보낼 수 있습니다.</li>
+        </ul>
+        <h3>사용자 이름 또는 비밀번호를 잃었을 때</h3>
+        <p>로그인 화면의 <b>사용자 이름 또는 비밀번호를 잃었어요</b>를 누릅니다.</p>
+        <ul>
+          <li><b>사용자 이름 찾기</b>: 이름을 바꾼 적이 있다면 <b>변경 전 이름</b>과 <b>현재 비밀번호</b>로 지금 이름을 확인할 수 있어요. 다른 사람이 옛 이름만으로 새 이름을 알아내지 못하도록 비밀번호도 함께 확인합니다.</li>
+          <li>이름을 바꾼 적이 없거나 비밀번호도 모르면 <b>문의</b>로 찾습니다.</li>
+          <li><b>비밀번호 찾기</b>는 문의로 진행됩니다. 운영자가 계정을 확인한 뒤 문의 답변으로 임시 비밀번호를 알려 드리니, 로그인 후 바로 새 비밀번호로 바꿔 주세요. 계정 확인을 위해 가입 시기, 최근 채팅 제목, 고유 ID 같은 정보를 적어 주면 빨라요.</li>
+        </ul>
+      </section>
+
+      <section class="docs-sec" id="notify">
+        <h2>12. 계정 알림 (안드로이드 앱)</h2>
+        <p>앱에서는 계정에 중요한 변화가 생기면 휴대폰 알림으로 알려 줍니다. 기본으로 켜져 있고, <b>설정 → 기타 설정 → 알림</b>에서 끄고 켤 수 있어요.</p>
+        <ul>
+          <li>사용자 이름 변경, 비밀번호 변경, 모든 기기 로그아웃, 새 로그인, 도구 연결 추가·해제, 문의 답변, 운영자 알림</li>
+          <li>다른 기기에서 비밀번호가 바뀌어 이 기기가 로그아웃돼도 알림은 받을 수 있습니다. 직접 로그아웃하면 이 기기의 알림은 꺼집니다.</li>
+          <li>앱을 열 때 바로 확인하고, 앱을 닫아 두어도 약 15분마다 확인합니다(배터리 절약 상태에 따라 늦어질 수 있음).</li>
+          <li>계정 → <b>최근 계정 활동</b>에서도 최근 기록을 볼 수 있어요. 본인이 하지 않은 변경이 보이면 바로 비밀번호를 바꾸고 문의해 주세요.</li>
+        </ul>
+      </section>
+
+      <section class="docs-sec" id="limits">
+        <h2>13. 저장공간과 한도</h2>
+        <div class="doc-table"><table>
+          <thead><tr><th>항목</th><th>한도</th></tr></thead>
+          <tbody>
+            <tr><td>계정 서버 저장공간 (채팅 + 파일)</td><td>30MB</td></tr>
+            <tr><td>서버 파일 1개</td><td>10MB</td></tr>
+            <tr><td>Sandbox 저장공간 (휴지통·백업 포함, 기기별)</td><td>100MB</td></tr>
+            <tr><td>Sandbox 업로드 1회</td><td>20MB</td></tr>
+            <tr><td>휴지통 보관 기간</td><td>7일</td></tr>
+            <tr><td>로컬 터미널 동시 세션</td><td>12개</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section class="docs-sec" id="faq">
+        <h2>14. 자주 묻는 질문</h2>
+        <details><summary>업데이트가 바로 안 보여요</summary><p>새로고침(앱은 다른 앱에 갔다가 돌아오기)을 해 주세요. 입력 중이거나 AI가 답변 중일 때는 앱이 자동으로 새로고침하지 않습니다.</p></details>
+        <details><summary>휴대폰에서 Enter를 누르면 메시지가 보내져요</summary><p>휴대폰·태블릿에서는 Enter가 항상 줄바꿈입니다. 그래도 보내진다면 페이지를 새로고침해 최신 버전인지 확인해 주세요.</p></details>
+        <details><summary>코드 블록 위에서 화면이 안 내려가요</summary><p>최신 버전에서 고쳐졌습니다. 코드 블록 위에서 위아래로 밀면 대화가 스크롤되고, 좌우로 밀면 긴 코드 줄이 스크롤됩니다.</p></details>
+        <details><summary>로컬 터미널에 "runtime/…tar.gz" 오류가 나와요</summary><p>앱 0.5.0 이하에서 앱 내부 Linux 이미지를 찾지 못하던 문제입니다. 최신 APK로 업데이트하면 해결됩니다.</p></details>
+        <details><summary>실수로 채팅을 지웠어요</summary><p>대화 내용은 되돌릴 수 없지만, 그 채팅의 프로젝트 파일은 7일 동안 Sandbox 휴지통에 남아 있습니다. Sandbox → 파일 → ⋯ → 휴지통에서 복원하세요.</p></details>
+        <details><summary>Sandbox에서 python, npm이 안 돼요</summary><p>Sandbox는 브라우저 안의 가상 환경이라 실제 프로그램을 실행하지 않습니다. 안드로이드 앱에서 Local 작업 공간과 로컬 터미널을 사용하세요.</p></details>
+        <details><summary>AI가 비밀번호나 API 키를 설정해 주지 않아요</summary><p>안전 규칙상 AI는 비밀번호·토큰·시크릿을 설정하지 않습니다. 해당 서비스의 설정 화면에서 직접 입력해 주세요.</p></details>
+        <details><summary>화면이 빨리 열리던데, 최신 정보가 맞나요?</summary><p>마지막으로 받은 화면 파일과 계정 정보를 기기에 저장해 두었다가 바로 보여 주고, 뒤에서 서버의 최신 정보로 곧바로 바꿉니다. 새 버전이 나오면 자동으로 새로고침되거나 "새 버전이 준비됐어요" 안내가 나옵니다. 인터넷이 끊겨도 마지막 화면은 열립니다.</p></details>
+        <details><summary>터미널에서 한글이 입력되지 않아요</summary><p>터미널은 글자가 바로 입력되도록 키보드 추천을 끈 모드를 씁니다. 이 모드에서는 키보드에 따라 영문만 입력될 수 있어요. 한글은 다른 곳에서 복사해 붙여 넣어 주세요.</p></details>
+        <details><summary>토큰이 다 떨어졌어요</summary><p>일일 토큰은 매일 00:00(한국 시간)에 다시 채워집니다. 받은 교환 코드가 있으면 사용량 → 코드 교환에 입력하세요.</p></details>
+      </section>
+    </main>
+  </div>
+
+  <footer class="page-foot">
+    <p><a href="./">KkibokAI</a> · <a href="privacy.html">개인정보 처리방침</a></p>
+  </footer>
+  <script src="assets/js/docs.js?v=1.17.0" defer></script>
+</body>
+</html>
